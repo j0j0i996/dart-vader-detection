@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<title>Camara control</title>
+	<link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+	<meta charset="UTF-8">
+	<meta name="keywords" content="Icehockey, Outdoor, JavaScript">
+	<meta name="description" content="Outdoor icehockey">
+	<meta name="author" content="Jonathan Schulte">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+
+	<div class="header">
+		<h1>IR camera control</h1>
+		<p>Take pictures and control the IR led's</p>
+	</div>
+
+	<nav>
+		<ul>
+			<li><a href="#home" class="active">Home</a></li>
+		</ul>
+	</nav>
+	<br>
+	<div class="row">
+		<div class="column side">
+			<p>Left side content (to be filled)</p>
+		</div>
+
+		<div class="column middle">
+			<h1>Camera control</h1>
+
+			<a href=# id=take_pic>Take picture</a>
+
+			<br><br>
+			<img id="img_elmnt" src="static/images/image1.jpg" alt="Last picture">
+			<br>
+		</div>
+
+		<div class="column side">
+			<p>Right side content (to be filled)</p>
+		</div>
+
+	</div>
+
+	<div class="footer">
+		<h2>Footer (to be filled)</h2>
+	</div>
+
+</body>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script> 
+<script src="{{ url_for('static', filename = 'js/takePicHandeler.js')}}"></script>
+
+<noscript>Sorry, your browser does not support JavaScript!</noscript>
+
+</html>
