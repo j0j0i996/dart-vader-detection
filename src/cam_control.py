@@ -4,7 +4,7 @@ from datetime import datetime
 from flask import url_for
 import os
 import re
-import dropbox_integration as dbx_int
+import src.dropbox_integration as dbx_int
 
 def take_picture():
     output_path = 'jpg/image.jpg'
