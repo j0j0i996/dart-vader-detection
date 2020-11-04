@@ -15,4 +15,4 @@ def take_picture():
     return json.dumps({'path': image_path})
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port='8090') #, debug=True
