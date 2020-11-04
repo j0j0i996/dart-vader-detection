@@ -10,7 +10,7 @@ $(function() {
             success: function(response){
                 var obj = JSON.parse(response)
                 console.log(obj.path);
-                document.getElementById("img_elmnt").src = "static/" + obj.path
+                document.getElementById("img_elmnt").src = "static/" + obj.path + "?" + new Date().getTime()
             },
             error: function(error){
                 console.log(error);
