@@ -1,16 +1,35 @@
 // Take picture in background over javascript to ajax to python and reload image
 $(function() {
-    $('a#take_pic').on('click', function(e) {
+    $('a#before').on('click', function(e) {
         e.preventDefault()
-        console.log('TakePicture is running');
+        console.log('Camera is taking picture');
 
         $.ajax({
-            url: '/take_picture',
+            url: '/take_picture/before',
             type: 'GET',
             success: function(response){
                 var obj = JSON.parse(response)
                 console.log(obj.path);
-                document.getElementById("img_elmnt").src = "static/" + obj.path + "?" + new Date().getTime()
+                document.getElementById("img_bf_elmnt").src = obj.path + "?" + new Date().getTime()
+            },
+            error: function(error){
+                console.log(error);
+            }
+        });
+        return false;
+    });
+
+    $('a#after').on('click', function(e) {
+        e.preventDefault()
+        console.log('Camera is taking picture');
+
+        $.ajax({
+            url: '/take_picture/after',
+            type: 'GET',
+            success: function(response){
+                var obj = JSON.parse(response)
+                console.log(obj.path);
+                document.getElementById("img_af_elmnt").src = obj.path + "?" + new Date().getTime()
             },
             error: function(error){
                 console.log(error);
