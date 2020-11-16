@@ -14,7 +14,7 @@ if int(config['Development']['OnRaspberry']):
     from picamera import PiCamera 
 
 class Camera:
-    stdBoardPos = None
+    std_board_pos = Board(std=True)
 
     def __init__(self, name, rotation):
         self.name = name
