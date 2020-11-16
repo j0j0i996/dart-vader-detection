@@ -14,13 +14,14 @@ if int(config['Development']['OnRaspberry']):
     from picamera import PiCamera 
 
 class Camera:
-    boardPosition = None
+    stdBoardPos = None
 
     def __init__(self, name, rotation):
         self.name = name
         self.rotation = rotation
         self.boardPosition = self.calibration()
         self.dartThrow = None
+        self.relBoardPos = None
 
     @staticmethod
     def calibration():
