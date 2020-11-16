@@ -1,11 +1,6 @@
 import numpy as np
 
-class Coordinate:
-    def __init__(self,x,y):
-        self.x = x
-        self.y = y
-
-class EllipsisDef:
+class Board:
     def __init__(self, pts = None):
         if pts is None:
             self.pts = []
@@ -16,3 +11,7 @@ class EllipsisDef:
 
     def __repr__(self):
         return str(self.pts)
+
+    def get_center(self):
+        #Fake implementation to test:
+        return np.float([0,0])
