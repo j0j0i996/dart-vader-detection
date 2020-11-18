@@ -1,7 +1,7 @@
 from flask import Flask, render_template
-import src.camera as cam
 import os
 import json
+import src.cameraClass as camCls
 
 app = Flask(__name__)
 
@@ -16,4 +16,13 @@ def take_picture(img_name):
 
 if __name__ == '__main__':
     #app.run(host='0.0.0.0', port='8090') #, debug=True
-    app.run(debug=True, port='8090')
+    #app.run(debug=True, port='8090')
+    camera = camCls.Camera('Test',180)
+    camera.motion_detection()
+
+    #print('_______')
+    #print('Dart Throw representation')
+    #print(camera.dartThrow)
+
+    #print('\nDart Board representation\n')
+    #print(camera.board)
