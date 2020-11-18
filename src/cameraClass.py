@@ -3,6 +3,7 @@ import configparser
 import src.dropbox_integration as dbx_intbefore
 import sys
 import numpy as np
+import cv2
 from src.boardClass import *
 from src.dartThrowClass import *
 
@@ -14,25 +15,27 @@ if int(config['Development']['OnRaspberry']):
     from picamera import PiCamera 
 
 class Camera:
-    std_board_pos = Board(std=True)
-
+        
     def __init__(self, name, rotation):
         self.name = name
         self.rotation = rotation
-        self.boardPosition = self.calibration()
+        self.board = self.calibration()
         self.dartThrow = None
-        self.relBoardPos = None
 
-    @staticmethod
-    def calibration():
-        pts = np.float32([[0,0],[0,0],[0,0],[0,0],[0,0]])
-        return Board(pts)
-    
-    def motion_detection(self)
+    def calibration(self):
+        center = [375,318]; left = [225,317]
+        right = [529,322]; top = [376,218]
+        bottom = [376,372]
+        rel_pts = np.float32([center, left, top, right, bottom])
+        return Board(rel_pts = rel_pts)
+        #self.img_width = 480
+        #self.img_height = 720
+
+    def motion_detection(self):
         # Fake implementation to test other functions
         image_before_link = 'static/jpg/before.jpg'
-        image_after_link = 'static/jpg/before.jpg'
-        self.dartThrow = dartThrow(image_before_link,image_after_link)
+        image_after_link = 'static/jpg/after.jpg'
+        self.dartThrow = dartThrow(image_before_link,image_after_link,self.board)
 
     # takes one picture and stores it locally and potentially on dropbox
     def take_picture(self,img_name):

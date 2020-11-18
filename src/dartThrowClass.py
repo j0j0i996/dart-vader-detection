@@ -1,33 +1,35 @@
 import cv2
 import numpy as np
-from boardClass import * # is required?
 
 class dartThrow:
 
-    def __init__(self, img_before_link, img_after_link):
+    def __init__(self, img_before_link, img_after_link, board) :
         self.img_before_link = img_before_link
         self.img_after_link = img_after_link
-        self.set_is_dart(self)
+        self.board = board
+        self.is_dart = self.is_dart()
 
         if self.is_dart:
-            self.set_rel_pos()
-        else: 
-            self.rel_carth_pos = None
+            self.rel_carth_pos = self.get_rel_pos()
+            self.std_carth_pos = self.board.rel_carth_pos_to_std_carth_pos(self.rel_carth_pos)
 
-        self.std_carth_pos = None
         self.std_polar_pos = None
         self.score = None
 
+    def __repr__(self):
+        return 'RelCarth Pos: {} \n\nStd Carth Pos: {} \n'\
+            .format(self.rel_carth_pos, self.std_carth_pos)
+
     def is_dart(self):
         # Fake implementation to test other functions
-        self.is_dart = True
+        return True
 
-    def set_rel_position(self):
+    def get_rel_pos(self):
         # Fake implementation to test other functions
-        self.rel_carth_pos = np.float32([0,0]])
+        return [443,277]
 
-    def get_score(self, camera)
-        if self.score = None:
+    def get_score(self, camera):
+        if self.score == None:
             self.set_score(self, relBoard, stdBoard)
         return self.score
 
@@ -35,16 +37,4 @@ class dartThrow:
         self.rel_carth_pos_to_std_carth_pos(camera)
         self.std_carth_pos_to_std_polar_pos()
         self.std_polar_pos_to_score()
-        
-    def rel_carth_pos_to_std_carth_pos(self, camera)
-        # to be implemented
-        return
-
-    def std_carth_pos_to_std_polar_pos(self)
-        # to be implemented
-        return
-
-    def std_polar_pos_to_score(self)
-        # to be implemented
-        return 60
     
