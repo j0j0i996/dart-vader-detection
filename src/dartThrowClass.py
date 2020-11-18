@@ -12,8 +12,8 @@ class dartThrow:
         if self.is_dart:
             self.rel_carth_pos = self.get_rel_pos()
             self.std_carth_pos = self.board.rel_carth_pos_to_std_carth_pos(self.rel_carth_pos)
+            self.std_polar_pos = self.board.std_carth_pos_to_std_polar_pos(self.std_carth_pos)
 
-        self.std_polar_pos = None
         self.score = None
 
     def __repr__(self):

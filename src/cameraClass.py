@@ -23,10 +23,13 @@ class Camera:
         self.dartThrow = None
 
     def calibration(self):
-        center = [375,318]; left = [225,317]
-        right = [529,322]; top = [376,218]
-        bottom = [376,372]
-        rel_pts = np.float32([center, left, top, right, bottom])
+        rel_pts = {
+            "center": [375,318],
+            "left": [225,317],
+            "right": [529,322],
+            "top": [376,218],
+            "bottom": [376,372]
+        }
         return Board(rel_pts = rel_pts)
         #self.img_width = 480
         #self.img_height = 720
