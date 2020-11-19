@@ -17,7 +17,6 @@ class Board:
         return 'Relative board position: \n{} \nStandard board position: \n{} \nHomography matrix \n {} \n'\
             .format(self.rel_pts, self.std_pts, self.h)
 
-
     def get_homography_matrix(self):
         src_pts = np.float32([self.rel_pts["center"], self.rel_pts["left"], self.rel_pts["right"], self.rel_pts["top"], self.rel_pts["bottom"]])
         dest_pts = np.float32([self.std_pts["center"], self.std_pts["left"], self.std_pts["right"], self.std_pts["top"], self.std_pts["bottom"]])
@@ -38,6 +37,12 @@ class Board:
             }
         return std_pts
 
+    def get_score(self, rel_carth_pos):
+            std_carth_pos = self.rel_carth_pos_to_std_carth_pos(rel_carth_pos)
+            std_polar_pos = self.std_carth_pos_to_std_polar_pos(std_carth_pos)
+            score = self.std_polar_pos_to_score(std_polar_pos)
+            return score
+
     def rel_carth_pos_to_std_carth_pos(self, pos_src):
         # [x_src,y_scr,1]
         pos_src = np.append(pos_src,1)
@@ -52,12 +57,40 @@ class Board:
 
     def std_carth_pos_to_std_polar_pos(self, std_cath_pos):
         x = std_cath_pos[0] - self.std_pts["center"][0]
-        y = self.std_pts["center"][1] - std_cath_pos[1] # because carthesian coordinate system of open vc images is flipped on the y-axis
+        y = self.std_pts["center"][1] - std_cath_pos[1]
         rho = np.sqrt(x**2 + y**2)
         phi = np.arctan2(y, x)/(2*np.pi)*360
-        print(rho,phi)
+
+        #arctan is mapping between -180 and 180, but we want an angle between 0 and 360 to simplify later tasks
+        if phi < 0: 
+            phi = 360 + phi
+
         return [rho,phi]
 
-    def std_polar_pos_to_score(self):
-        # to be implemented
-        return 60
+    def std_polar_pos_to_score(self, std_polar_pos):
+        # possible single scores of the dartboard, starting from 6 (phi = 0 for polar coordinate)
+        fields = [6,13,4,18,1,20,5,12,9,14,11,8,16,7,19,3,17,2,15,10]
+
+        # map angle to single score
+        single_score = fields[int(std_polar_pos[1]/360*20+0.5)]
+
+        # map radius to multipliers or exceptions (bullseye)
+        r_in_mm = std_polar_pos[0]/np.abs(self.std_pts['top'][1]-self.std_pts['center'][1])*170
+        print(single_score)
+        print(r_in_mm)
+
+        if r_in_mm < 6.35: 
+            score = 50
+        elif r_in_mm < 15.9:
+            score = 25
+        elif r_in_mm < 99 or (r_in_mm > 107 and r_in_mm < 162):
+            score = single_score
+        elif r_in_mm > 99 and r_in_mm < 107:
+             score = 3 * single_score
+        elif r_in_mm > 162 and r_in_mm < 170:
+             score = 2 * single_score
+        else:
+            score = 0
+
+        print(score)
+        return score

@@ -25,10 +25,10 @@ class Camera:
     def calibration(self):
         rel_pts = {
             "center": [375,318],
-            "left": [225,317],
+            "left": [225,314],
             "right": [529,322],
             "top": [376,218],
-            "bottom": [376,372]
+            "bottom": [376,369]
         }
         return Board(rel_pts = rel_pts)
         #self.img_width = 480
