@@ -22,7 +22,29 @@ class dartThrow:
         return True
 
     def get_rel_pos(self):
+        img_bf = cv2.imread(self.img_before_link)
+        img_af = cv2.imread(self.img_after_link)
+        diff = cv2.absdiff(img_af, img_bf)
+
+        # transform to gray scale
+        diffGray = cv2.cvtColor(diff,cv2.COLOR_BGR2GRAY)
+
+        # add blur
+        diffBlur = cv2.GaussianBlur(diffGray,(7,7),2)
+
+        # apply Canny edge detector
+        diffCanny = cv2.Canny(diffBlur, 0, 100)
         
-        # Fake implementation to test other functions
-        return [374,318]
-        #return [376,361]
+        width, height = diffCanny.shape[:2]
+
+        # find most top pixel which is white
+        found = False
+        for y in range(0,height):
+            for x in range(0,width):
+                if diffCanny[y,x] == 255: #x and y are inverted for opencv img
+                    found = True
+                    break
+            if found:
+                break
+        
+        return [x,y]

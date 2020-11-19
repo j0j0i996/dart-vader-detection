@@ -20,8 +20,9 @@ class Board:
     def get_homography_matrix(self):
         src_pts = np.float32([self.rel_pts["center"], self.rel_pts["left"], self.rel_pts["right"], self.rel_pts["top"], self.rel_pts["bottom"]])
         dest_pts = np.float32([self.std_pts["center"], self.std_pts["left"], self.std_pts["right"], self.std_pts["top"], self.std_pts["bottom"]])
+
         h, status = cv2.findHomography(src_pts, dest_pts)
-        #h = cv2.getPerspectiveTransform(self.rel_pts, self.std_pts)
+        
         return h
 
     def get_std_pts(self):
@@ -76,8 +77,6 @@ class Board:
 
         # map radius to multipliers or exceptions (bullseye)
         r_in_mm = std_polar_pos[0]/np.abs(self.std_pts['top'][1]-self.std_pts['center'][1])*170
-        print(single_score)
-        print(r_in_mm)
 
         if r_in_mm < 6.35: 
             score = 50
