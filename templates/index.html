@@ -32,12 +32,22 @@
 		<div class="column middle">
 			<h1>Camera control</h1>
 
-			<a href=# id=before>Take img before throw</a>
-			<a href=# id=after>Take img after throw</a>
+			<a href=# id=before>Take img before throw</a> <br><br>
+			<a href=# id=after>Take img after throw</a> <br><br>
+			<a href=# id=get_score>Get score</a> <br><br>
+
+			<h3>Last score</h3>
+			<h4 id=score>0</h4>
 
 			<br><br>
-			<img id="img_bf_elmnt" src="static/jpg/before.jpg" alt="Last picture">
-			<img id="img_af_elmnt" src="static/jpg/after.jpg" alt="Last picture">
+			<p>Last recognized dart</p>
+			<img id="rec_dart" src="static/jpg/rec_dart.jpg" alt="Last recognized dart">
+			<p>Canny detection</p>
+			<img id="canny" src="static/jpg/canny.jpg" alt="Canny detection">
+			<p>Image before throw</p>
+			<img id="img_bf_elmnt" src="static/jpg/before.jpg" alt="Image before throw">
+			<p>Image after throw</p>
+			<img id="img_af_elmnt" src="static/jpg/after.jpg" alt="Image after throw">
 			<br>
 		</div>
 
@@ -54,7 +64,8 @@
 </body>
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script> 
-<script src="{{ url_for('static', filename = 'js/takePicHandeler.js')}}"></script>
+<script src="{{ url_for('static', filename = 'js/takePicHandler.js')}}"></script>
+<script src="{{ url_for('static', filename = 'js/getScoreHandler.js')}}"></script>
 
 <noscript>Sorry, your browser does not support JavaScript!</noscript>
 

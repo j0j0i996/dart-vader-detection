@@ -30,21 +30,31 @@ class dartThrow:
         diffGray = cv2.cvtColor(diff,cv2.COLOR_BGR2GRAY)
 
         # add blur
-        diffBlur = cv2.GaussianBlur(diffGray,(7,7),2)
+        diffBlur = cv2.GaussianBlur(diffGray,(5,5),2)
 
         # apply Canny edge detector
-        diffCanny = cv2.Canny(diffBlur, 0, 100)
+        (thresh, diffBW) = cv2.threshold(diffBlur, 40, 255, cv2.THRESH_BINARY)
         
-        width, height = diffCanny.shape[:2]
+        height, width = diffBW.shape[:2]
+
+        # For testing
+        cv2.imwrite('static/jpg/canny.jpg',diffBW)
 
         # find most top pixel which is white
         found = False
         for y in range(0,height):
             for x in range(0,width):
-                if diffCanny[y,x] == 255: #x and y are inverted for opencv img
+                if diffBW[y,x] == 255: #x and y are inverted for opencv img
                     found = True
                     break
             if found:
                 break
-        
+
+        # For testing
+        cv2.circle(diffBW, (x,y), 5,(0, 76, 252), 3)
+        cv2.circle(img_af, (x,y), 5,(0, 76, 252), 3)
+        cv2.imwrite('static/jpg/rec_dart.jpg',img_af)
+        cv2.imwrite('static/jpg/canny.jpg',diffBW)
+        print(x,y)
+
         return [x,y]

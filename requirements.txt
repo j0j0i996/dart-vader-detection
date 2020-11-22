@@ -20,6 +20,7 @@ mujoco-py==0.5.7
 numpy==1.19.4
 opencv-python==4.4.0.46
 packaging==20.4
+picamera==1.13
 Pillow==8.0.1
 pkg-resources==0.0.0
 pycparser==2.20
