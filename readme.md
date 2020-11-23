@@ -6,21 +6,6 @@
 
 # Readme.md
 
-<html>
-    <iframe
-   src="docs/drawio.html"
-   width="90%" 
-   height="400" 
-   name="SELFHTML_in_a_box">
-    </iframe>
-    <iframe
-   src="https://https://www.google.de/"
-   width="90%" 
-   height="400" 
-   name="SELFHTML_in_a_box">
-    </iframe>
-</html>
-
 **Table of Contents**
 
 # Getting Started
@@ -57,15 +42,30 @@ Afterwards a motion detection will detect changes in the camera capture and will
 
 <img src="docs/General_flow.png?raw=true" alt="drawing" width="200"/>
 
-## 2.  Detect dart tip
+## 2.  Detect dart position
 
-We now have two images - one from before the throw and one from after the throw. We use opencv to take the difference of both images. Other openCV functions help us to convert the image to black and white, whereas the white pixels are the one which haved changed.
 
-<img src="docs/BW_diff.png?raw=true" alt="drawing" width="300"/>
+We have two images - one from before the throw and one from after the throw. We use opencv to take the difference of both images. 
 
-To detect the dart tip positon now, we can simply use the most top white pixel in the image difference. This works as long as the angle of the camera relative to the dart board plane is lower than angle between the dart board and the dart.
+Note: It is easy to detect the dart - the difficult thing is to detect the exect position of dart tip - especially under  hard light conditions or if the dart tip has almost the same color as the background
 
 <img src="docs/Detection_flow.png?raw=true" alt="drawing" width="300"/>
+
+### Detect dart
+
+First we want to know where the dart is. We use the opencv contour detection and draw a bounding box around our dart.
+
+<img src="docs/contours.jpg?raw=true" alt="drawing" width="300"/>
+
+### Detect tip
+
+Now we make the box slightly bigger. Thereby we ensure that the darttip is definetly inside of the box (in case the contour detection only detected the rest of the dart and not the tip)
+
+We use a detailed feature point detection inside the bounding box. The most top feature point is used as our dart position.
+
+<img src="docs/features.jpg?raw=true" alt="drawing" width="40"/><br>
+
+<img src="docs/rec_dart.jpg?raw=true" alt="drawing" width="300"/>
 
 ## 3. Transform dart tip postion to score
 
