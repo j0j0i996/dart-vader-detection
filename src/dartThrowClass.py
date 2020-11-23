@@ -83,7 +83,7 @@ class dartThrow:
             cv2.circle(diffFeat,(x,y),3,255,-1)
 
         path_out = 'static/jpg/'
-        cv2.drawMarker(img_af, (int(x_out), int(y_out)), color=(0, 76, 252))
+        cv2.drawMarker(img_af, (int(x_out), int(y_out)), color=(0, 76, 252), markerSize = 40, thickness = 2)
 
         cv2.imwrite(path_out + 'rec_dart.jpg',img_af)
         cv2.imwrite(path_out + 'contours.jpg',diffCnts)
