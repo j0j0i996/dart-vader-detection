@@ -1,6 +1,6 @@
-<mxfile host="65bd71144e" modified="2020-11-19T18:01:40.280Z" agent="5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Code/1.51.1 Chrome/83.0.4103.122 Electron/9.3.3 Safari/537.36" etag="fB1Z5xsza9zwNWLYkvt8" version="13.6.5" pages="2">
+<mxfile host="65bd71144e" modified="2020-11-23T12:51:03.560Z" agent="5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Code/1.51.1 Chrome/83.0.4103.122 Electron/9.3.3 Safari/537.36" etag="MvDikgOCZSC1AGCC4mCz" version="13.6.5" pages="2">
     <diagram id="C5RBs43oDa-KdzZeNtuy" name="Flow diagrams (UML)">
-        <mxGraphModel dx="1444" dy="1751" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+        <mxGraphModel dx="1270" dy="1780" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
             <root>
                 <mxCell id="WIyWlLk6GJQsqaUBKTNV-0"/>
                 <mxCell id="WIyWlLk6GJQsqaUBKTNV-1" parent="WIyWlLk6GJQsqaUBKTNV-0"/>
@@ -90,7 +90,7 @@
                 <mxCell id="VfbfEg3--uczthN-Tf3u-31" value="board.std_polar_pos_to_score()" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;glass=0;strokeWidth=1;shadow=0;align=center;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
                     <mxGeometry x="1250" y="355" width="215" height="65" as="geometry"/>
                 </mxCell>
-                <mxCell id="vM0_4PVjwewj4wCNWl0C-0" value="Detect dart tip with OpenCV&lt;font style=&quot;font-size: 21px&quot;&gt;&lt;br&gt;dartThrow.detect_rel_pos()&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeWidth=1;fontSize=25;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
+                <mxCell id="vM0_4PVjwewj4wCNWl0C-0" value="Detect dart tip with OpenCV&lt;font style=&quot;font-size: 21px&quot;&gt;&lt;br&gt;dartThrow.get_rel_pos()&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeWidth=1;fontSize=25;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
                     <mxGeometry x="605" y="-155" width="330" height="70" as="geometry"/>
                 </mxCell>
                 <mxCell id="vM0_4PVjwewj4wCNWl0C-1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=25;" parent="WIyWlLk6GJQsqaUBKTNV-1" source="vM0_4PVjwewj4wCNWl0C-2" target="vM0_4PVjwewj4wCNWl0C-4" edge="1">
@@ -108,17 +108,26 @@
                 <mxCell id="vM0_4PVjwewj4wCNWl0C-5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=25;" parent="WIyWlLk6GJQsqaUBKTNV-1" source="vM0_4PVjwewj4wCNWl0C-6" target="vM0_4PVjwewj4wCNWl0C-7" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="vM0_4PVjwewj4wCNWl0C-6" value="Convert to black and white image, whereas the white pixels are the pixels which have changed" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;glass=0;strokeWidth=1;shadow=0;align=center;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
+                <mxCell id="vM0_4PVjwewj4wCNWl0C-6" value="Find dart -&amp;gt; Use contours to find bounding box around dart" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;glass=0;strokeWidth=1;shadow=0;align=center;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
                     <mxGeometry x="675" y="230" width="215" height="65" as="geometry"/>
                 </mxCell>
-                <mxCell id="vM0_4PVjwewj4wCNWl0C-7" value="Use the most top white pixel as the dart tip position" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;glass=0;strokeWidth=1;shadow=0;align=center;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
+                <mxCell id="vM0_4PVjwewj4wCNWl0C-7" value="Sensible feature detection inside the detecting bounding box" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;glass=0;strokeWidth=1;shadow=0;align=center;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
                     <mxGeometry x="675" y="360" width="215" height="65" as="geometry"/>
+                </mxCell>
+                <mxCell id="0" value="Use the most feature as the dart tip position" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;glass=0;strokeWidth=1;shadow=0;align=center;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+                    <mxGeometry x="675" y="490" width="215" height="65" as="geometry"/>
+                </mxCell>
+                <mxCell id="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=25;entryX=0.5;entryY=0;entryDx=0;entryDy=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="vM0_4PVjwewj4wCNWl0C-7" target="0">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="783" y="440" as="sourcePoint"/>
+                        <mxPoint x="792.5" y="370" as="targetPoint"/>
+                    </mxGeometry>
                 </mxCell>
             </root>
         </mxGraphModel>
     </diagram>
     <diagram id="4N21EgczrAuXKmDjtq6Z" name="Class diagram UML">
-        <mxGraphModel dx="594" dy="1682" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+        <mxGraphModel dx="420" dy="1711" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
             <root>
                 <mxCell id="wfajoiQt14GMa8PLNwFg-0"/>
                 <mxCell id="wfajoiQt14GMa8PLNwFg-1" parent="wfajoiQt14GMa8PLNwFg-0"/>

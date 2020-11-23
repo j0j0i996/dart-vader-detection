@@ -6,8 +6,22 @@
 
 # Readme.md
 
-**Table of Contents**
+<html>
+    <iframe
+   src="docs/drawio.html"
+   width="90%" 
+   height="400" 
+   name="SELFHTML_in_a_box">
+    </iframe>
+    <iframe
+   src="https://https://www.google.de/"
+   width="90%" 
+   height="400" 
+   name="SELFHTML_in_a_box">
+    </iframe>
+</html>
 
+**Table of Contents**
 
 # Getting Started
 ##Set up camera for raspberry pi: 
