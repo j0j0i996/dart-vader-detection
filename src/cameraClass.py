@@ -1,6 +1,6 @@
 from datetime import datetime
 import configparser
-import src.dropbox_integration as dbx_intbefore
+import src.dropbox_integration as dbx_int
 import sys
 import numpy as np
 import cv2
@@ -24,11 +24,11 @@ class Camera:
 
     def calibration(self):
         rel_pts = {
-            "center": [388,328],
-            "left": [237,339],
-            "right": [542,315],
-            "top": [380,228],
-            "bottom": [393,382]
+            "center": [372,318],
+            "left": [221,333],
+            "right": [525,301],
+            "top": [360,217],
+            "bottom": [380,372]
         }
         return Board(rel_pts = rel_pts)
         #self.img_width = 480
@@ -71,7 +71,7 @@ class Camera:
         if int(config['Dropbox']['Enabled']):
             print('Test')
             now = datetime.now()
-            dbx_name = '/Images/' + now.strftime("%Y_%m_%d_%H_%M_%S") + img_name
+            dbx_name = '/Images/Session_2020_11_22/' + now.strftime("%Y_%m_%d_%H_%M_%S") + '.jpg'
             dbx_int.img_upload(local_output,dbx_name)
 
         del config

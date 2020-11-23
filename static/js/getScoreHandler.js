@@ -12,7 +12,8 @@ $(function() {
                 console.log(obj.score);
                 document.getElementById("score").innerHTML = obj.score
                 document.getElementById("rec_dart").src = "static/jpg/rec_dart.jpg" + "?" + new Date().getTime()
-                document.getElementById("canny").src = "static/jpg/canny.jpg" + new Date().getTime()
+                document.getElementById("contours").src = "static/jpg/contours.jpg" + "?" + new Date().getTime()
+                document.getElementById("features").src = "static/jpg/features.jpg" + "?" + new Date().getTime()
             },
             error: function(error){
                 console.log(error);
