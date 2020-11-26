@@ -11,6 +11,7 @@ from src.dartThrowClass import *
 # This can be set in config.ini
 config = configparser.ConfigParser()
 config.read('config.ini')
+
 if int(config['Development']['OnRaspberry']):
     from picamera import PiCamera 
 
@@ -51,10 +52,15 @@ class Camera:
         local_output = 'static/jpg/' + img_name
 
         try:
-            PiCam = PiCamera()
-            PiCam.rotation = self.rotation
-            PiCam.start_preview()
-            PiCam.capture(local_output)
+            # define a video capture object 
+            vid = cv2.VideoCapture(0) 
+            ret, img = vid.read() 
+            img = cv2.rotate(img, cv2.ROTATE_180)
+            cv2.imwrite(local_output,img)
+            #PiCam = PiCamera()
+            #PiCam.rotation = self.rotation
+            #PiCam.start_preview()
+            #PiCam.capture(local_output)
 
         except: 
             print('Camera failed to take a picture')
@@ -62,7 +68,8 @@ class Camera:
             raise
 
         finally:
-            PiCam.close()
+            #PiCam.close()
+            vid.release()
 
         #Check if image shall be uploaded to dbx
         config = configparser.ConfigParser()
