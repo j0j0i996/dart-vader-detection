@@ -7,14 +7,6 @@ import cv2
 from src.boardClass import *
 from src.dartThrowClass import *
 
-# Check if we are working on raspberry pi. If not, PiCamera cannot be used.
-# This can be set in config.ini
-config = configparser.ConfigParser()
-config.read('config.ini')
-
-if int(config['Development']['OnRaspberry']):
-    from picamera import PiCamera 
-
 class Camera:
         
     def __init__(self, name, rotation):
@@ -58,10 +50,6 @@ class Camera:
             ret, img = vid.read() 
             img = cv2.rotate(img, cv2.ROTATE_180)
             cv2.imwrite(local_output,img)
-            #PiCam = PiCamera()
-            #PiCam.rotation = self.rotation
-            #PiCam.start_preview()
-            #PiCam.capture(local_output)
 
         except: 
             print('Camera failed to take a picture')
@@ -69,7 +57,6 @@ class Camera:
             raise
 
         finally:
-            #PiCam.close()
             vid.release()
 
         #Check if image shall be uploaded to dbx
@@ -84,8 +71,3 @@ class Camera:
 
         del config
         return local_output
-
-
-# Testing
-cam1 = Camera('Test', 180)
-print(cam1.__dict__)
