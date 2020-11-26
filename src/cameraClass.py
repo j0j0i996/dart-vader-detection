@@ -31,6 +31,7 @@ class Camera:
             "top": [360,217],
             "bottom": [380,372]
         }
+
         return Board(rel_pts = rel_pts)
         #self.img_width = 480
         #self.img_height = 720
