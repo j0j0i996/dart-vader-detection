@@ -63,8 +63,6 @@ class dartThrow:
         if bnds['right'] - bnds['left'] > 0 and bnds['bottom'] - bnds['top'] > 0:
             cv2.rectangle(diffCnts, (bnds['left'], bnds['top']), (bnds['right'], bnds['bottom']), (255, 0, 0), 2)
 
-        print(bnds)
-
         diffFeat = diffBlur.copy()[bnds['top']:bnds['bottom'], bnds['left']:bnds['right']]
 
         #For testing
@@ -132,7 +130,6 @@ class dartThrow:
 
         path_out = 'static/jpg/'
         cv2.drawMarker(img_af, (int(x_out), int(y_out)), color=(0, 76, 252), markerSize = 40, thickness = 2)
-
         cv2.imwrite(path_out + 'rec_dart.jpg',img_af)
         cv2.imwrite(path_out + 'features_line_filtered.jpg',diffFeatFiltered)
         cv2.imwrite(path_out + 'contours.jpg',diffCnts)
