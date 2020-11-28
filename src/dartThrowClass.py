@@ -9,6 +9,7 @@ class dartThrow:
         self.board = board
         
         self.rel_carth_pos = self.get_rel_pos()
+        #self.rel_carth_pos = [297,201]
         self.score = self.board.get_score(self.rel_carth_pos)
 
     def __repr__(self):

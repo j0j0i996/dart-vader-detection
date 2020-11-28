@@ -19,14 +19,15 @@ class Camera:
         self.bnds = self.set_camera_bnds()
         self.board = Board(rel_pts = self.rel_pts)
         self.dartThrow = None
+        #self.dartThrow = dartThrow('test','test',self.board)
 
     def calibration(self):
         rel_pts = {
             "center": [338,323],
-            "left": [205,336],
+            "left": [206,337],
             "right": [472,308],
-            "top": [324,234],
-            "bottom": [345,368]
+            "top": [325,232],
+            "bottom": [346,368]
         }
         return rel_pts
 
