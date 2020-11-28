@@ -14,11 +14,14 @@ config.read('config.ini')
 
 class Camera:
         
-    def __init__(self, name, rotation):
+    def __init__(self, name, rotation, width = 720, height = 480):
         self.name = name
         self.rotation = rotation
         self.board = self.calibration()
+        self.width = width
+        self.height = height
         self.dartThrow = None
+        self.bnds = self.get_camera_bnds() # set image boundaries around dart board dependent on calibration
 
     def calibration(self):
         rel_pts = {
@@ -30,8 +33,6 @@ class Camera:
         }
 
         return Board(rel_pts = rel_pts)
-        #self.img_width = 480
-        #self.img_height = 720
 
     def motion_detection(self):
 
@@ -43,72 +44,61 @@ class Camera:
 
         images = [0,0,0] # indexes: 0: before motion, 1: motion detected?, 2: after motion
 
-        try:
-            # define a video capture object 
-            vid = cv2.VideoCapture(0) 
+                             
+        while True:
+
+            #1. Step Check for motion
+            img = self.take_picture()
+
+            images[0] = images[1]
+            images[1] = img
             
-            while True:
-                #1. Step Check for motion
-                time.sleep(t_repeat)
-                ret, img = vid.read() 
-                img = cv2.rotate(img, cv2.ROTATE_180)
-                images[0] = images[1]
-                images[1] = img
-                
-                if isinstance(images[0],int):
-                    continue
+            if isinstance(images[0],int):
+                continue
 
-                if Camera.are_images_different(images[0], images[1]):
-                    t = t_repeat
+            if Camera.are_images_different(images[0], images[1]):
+                t = t_repeat
 
-                    # Check if motion stops within time
-                    while t < t_max:
-                        time.sleep(t_repeat)
-                        ret, img = vid.read() 
-                        img = cv2.rotate(img, cv2.ROTATE_180)
-                        images[2] = img
+                # 2. Step: Check if motion stops within time
+                while t < t_max:
+                    time.sleep(t_repeat)
+                    img = self.take_picture()
+                    images[2] = img
 
-                        if Camera.are_images_different(images[1], images[2]):
-                            t = t + t_repeat
-                            continue
-                        else: # Motion stopped
-                            break
-
-                    if t < t_max: # Motion detected and stopped in time
-                        cv2.imwrite(image_before_link,images[0])
-                        cv2.imwrite(image_after_link,images[2])
-                        break
-                    else: #Motion detected but was too long
-                        time.sleep(0.5)
-                        images = [0,0,0]
+                    if Camera.are_images_different(images[1], images[2]):
+                        t = t + t_repeat
                         continue
-            
-        except: 
-            print('Camera failed to take a picture')
-            print("Unexpected error:", sys.exc_info()[0])
-            raise
+                    else: # Motion stopped
+                        break
 
-        finally:
-            vid.release()
+                if t < t_max: # Motion detected and stopped in time
+                    cv2.imwrite(image_before_link,images[0])
+                    cv2.imwrite(image_after_link,images[2])
+                    break
+                else: #Motion detected but was too long
+                    time.sleep(1)
+                    images = [0,0,0]
+                    continue
+            
         print('Detected')
         self.dartThrow = dartThrow(image_before_link,image_after_link,self.board)
 
-    # takes one picture and stores it locally and potentially on dropbox
-    def take_picture(self,img_name):
-        
-        # Check if filename is jpg
-        if not img_name.endswith('.jpg'):
-            img_name = img_name + '.jpg'
-
-        #local output name
-        local_output = 'static/jpg/' + img_name
+    # takes one picture and returns it
+    def take_picture(self):
 
         try:
             # define a video capture object 
-            vid = cv2.VideoCapture(0) 
-            ret, img = vid.read() 
-            img = cv2.rotate(img, cv2.ROTATE_180)
-            cv2.imwrite(local_output,img)
+            cap = cv2.VideoCapture(0)
+            
+            #set the width and height, and UNSUCCESSFULLY set the exposure time
+            #cap.set(3,self.width)
+            #cap.set(4,self.height) 
+
+            ret, img = cap.read() 
+            img = cv2.rotate(img, cv2.ROTATE_180)  #Rotation important, make dynamic / accessible
+
+            # Crop to dart board
+            img = img[self.bnds['top']:self.bnds['bottom'], self.bnds['left']:self.bnds['right']]
 
         except: 
             print('Camera failed to take a picture')
@@ -116,20 +106,20 @@ class Camera:
             raise
 
         finally:
-            vid.release()
+            cap.release()
 
-        #Check if image shall be uploaded to dbx
-        config = configparser.ConfigParser()
-        config.read('config.ini')
+        return img
 
-        if int(config['Dropbox']['Enabled']):
-            print('Test')
-            now = datetime.now()
-            dbx_name = '/Images/Session_2020_11_22/' + now.strftime("%Y_%m_%d_%H_%M_%S") + '.jpg'
-            dbx_int.img_upload(local_output,dbx_name)
+    def get_camera_bnds(self):
 
-        del config
-        return local_output
+        extend = 100
+        bnds = {'top': max(self.board.rel_pts['top'][1] - extend, 0),
+                'left': max(self.board.rel_pts['left'][0] - extend, 0),
+                'right': min(self.board.rel_pts['right'][0] + extend, self.width),
+                'bottom':min(self.board.rel_pts['bottom'][0] + extend, self.height)
+                }
+
+        return bnds
 
     @staticmethod
     def are_images_different(img1, img2):
