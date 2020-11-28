@@ -16,7 +16,7 @@ def take_picture(img_name):
     image_path = camera.take_picture(img_name)
     return json.dumps({'path': image_path})
 
-@app.route('/get_score')
+@app.route('/wait_throw')
 def get_score():
     camera.motion_detection()
     return json.dumps({'score': camera.dartThrow.score})
