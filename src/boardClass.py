@@ -18,6 +18,7 @@ class Board:
             .format(self.rel_pts, self.std_pts, self.h)
 
     def get_homography_matrix(self):
+        
         src_pts = np.float32([self.rel_pts["center"], self.rel_pts["left"], self.rel_pts["right"], self.rel_pts["top"], self.rel_pts["bottom"]])
         dest_pts = np.float32([self.std_pts["center"], self.std_pts["left"], self.std_pts["right"], self.std_pts["top"], self.std_pts["bottom"]])
 
@@ -60,11 +61,10 @@ class Board:
         x = std_cath_pos[0] - self.std_pts["center"][0]
         y = self.std_pts["center"][1] - std_cath_pos[1]
         rho = np.sqrt(x**2 + y**2)
-        phi = np.arctan2(y, x)/(2*np.pi)*360
+        phi = np.arctan2(y, x)/(2*np.pi)*360 + 360/20/2  # 0 degree is intersect between 6 and 10
 
         #arctan is mapping between -180 and 180, but we want an angle between 0 and 360 to simplify later tasks
-        if phi < 0: 
-            phi = 360 + phi
+        phi = phi % 360
 
         return [rho,phi]
 
@@ -73,7 +73,7 @@ class Board:
         fields = [6,13,4,18,1,20,5,12,9,14,11,8,16,7,19,3,17,2,15,10]
 
         # map angle to single score
-        single_score = fields[int(std_polar_pos[1]/360*20+0.5)]
+        single_score = fields[int(std_polar_pos[1]/360*20)]
 
         # map radius to multipliers or exceptions (bullseye)
         r_in_mm = std_polar_pos[0]/np.abs(self.std_pts['top'][1]-self.std_pts['center'][1])*170

@@ -7,19 +7,14 @@ class dartThrow:
         self.img_before_link = img_before_link
         self.img_after_link = img_after_link
         self.board = board
-        self.is_dart = self.is_dart()
-
-        if self.is_dart:
-            self.rel_carth_pos = self.get_rel_pos()
-            self.score = self.board.get_score(self.rel_carth_pos)
+        
+        self.rel_carth_pos = self.get_rel_pos()
+        #self.rel_carth_pos = [297,201]
+        self.score = self.board.get_score(self.rel_carth_pos)
 
     def __repr__(self):
         return 'RelCarth Pos: {} \n\nStd Carth Pos: {} \n'\
             .format(self.rel_carth_pos, self.std_carth_pos)
-
-    def is_dart(self):
-        # Fake implementation to test other functions
-        return True
 
     def get_rel_pos(self):
 
@@ -62,8 +57,6 @@ class dartThrow:
         #For testing
         if bnds['right'] - bnds['left'] > 0 and bnds['bottom'] - bnds['top'] > 0:
             cv2.rectangle(diffCnts, (bnds['left'], bnds['top']), (bnds['right'], bnds['bottom']), (255, 0, 0), 2)
-
-        print(bnds)
 
         diffFeat = diffBlur.copy()[bnds['top']:bnds['bottom'], bnds['left']:bnds['right']]
 
@@ -132,7 +125,6 @@ class dartThrow:
 
         path_out = 'static/jpg/'
         cv2.drawMarker(img_af, (int(x_out), int(y_out)), color=(0, 76, 252), markerSize = 40, thickness = 2)
-
         cv2.imwrite(path_out + 'rec_dart.jpg',img_af)
         cv2.imwrite(path_out + 'features_line_filtered.jpg',diffFeatFiltered)
         cv2.imwrite(path_out + 'contours.jpg',diffCnts)

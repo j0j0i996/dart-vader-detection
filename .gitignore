@@ -10,3 +10,11 @@ src/__pycache__/dropbox_integration.cpython-36.pyc
 src/__pycache__/boardClass.cpython-36.pyc
 src/__pycache__/cameraClass.cpython-36.pyc
 src/__pycache__/dartThrowClass.cpython-36.pyc
+src/__pycache__/cameraClass.cpython-37.pyc
+src/__pycache__/dartThrowClass.cpython-37.pyc
+static/jpg/contours.jpg
+static/jpg/features_line_filtered.jpg
+static/jpg/rec_dart.jpg
+static/jpg/features.jpg
+static/jpg/before.jpg
+static/jpg/after.jpg
