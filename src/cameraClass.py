@@ -22,25 +22,30 @@ class Camera:
         #self.dartThrow = dartThrow('test','test',self.board)
 
     def calibration(self):
+
+        img = self.take_picture()
+        cv2.imwrite('static/jpg/calibration.jpg', img)
+
         rel_pts = {
-            "center": [338,323],
-            "left": [206,337],
-            "right": [472,308],
-            "top": [325,232],
-            "bottom": [346,368]
+            "center": [335,323],
+            "left": [202,334],
+            "right": [469,308],
+            "top": [322,231],
+            "bottom": [340,372]
         }
         return rel_pts
 
     def motion_detection(self):
         
-        t_repeat = 0.05 # Take a picure every t_repeat seconds
-        t_max = 0.2 # Maximum time the motion should take time - hereby we can distinguish between dart throw and human
-        t_pause = 1 # Time to pause after larger object or longer movement was detected (e.g. hand)
+        t_repeat = 0.025 # Take a picure every t_repeat seconds
+        t_max = 0.15 # Maximum time the motion should take time - hereby we can distinguish between dart throw and human
+        t_pause_large = 4 # Time to pause after larger object or longer movement was detected (e.g. hand)
+        t_pause_long = 0.5
 
         images = [0,0,0] # indexes: 0: before motion, 1: motion detected?, 2: after motion
 
-        minThres = 0.0002 #Thresholds important - make accessible / dynamic - between 0 and 1
-        maxThres = 0.01
+        minRatio = 0.0001 #Thresholds important - make accessible / dynamic - between 0 and 1
+        maxRatio = 0.01
 
         while True:
 
@@ -56,11 +61,11 @@ class Camera:
             #C heck if object size is plausible
             img_diff_ratio = Camera.get_img_diff_ratio(images[0], images[1])
 
-            if img_diff_ratio > maxThres:
+            if img_diff_ratio > maxRatio:
                 # Object too large
-                time.sleep(t_pause)
+                time.sleep(t_pause_large)
                 continue
-            elif img_diff_ratio > minThres and img_diff_ratio < maxThres:
+            elif img_diff_ratio > minRatio and img_diff_ratio < maxRatio:
                 # Motion detected and no large object
                 t = t_repeat
 
@@ -72,7 +77,7 @@ class Camera:
                     
                     #Check if there is still movement
                     img_diff_ratio = Camera.get_img_diff_ratio(images[1], images[2])
-                    if img_diff_ratio > minThres: # Check if motion is still ongoing
+                    if img_diff_ratio > minRatio: # Check if motion is still ongoing
                         t = t + t_repeat
                         continue
                     else: # Motion stopped
@@ -82,7 +87,7 @@ class Camera:
                 if t < t_max:
                      # Final check if object size is plausible for a Dart
                     img_diff_ratio = Camera.get_img_diff_ratio(images[0], images[2])
-                    if img_diff_ratio > minThres and img_diff_ratio < maxThres:
+                    if img_diff_ratio > minRatio and img_diff_ratio < maxRatio:
                         t = t_repeat
                         print('Detected')
                         # Get image output path
@@ -101,7 +106,7 @@ class Camera:
 
                 else: #Motion detected but was too long
                     print('Too long')
-                    time.sleep(t_pause)
+                    time.sleep(t_pause_long)
                     images = [0,0,0]
                     continue
 
@@ -122,7 +127,8 @@ class Camera:
             img = cv2.rotate(img, cv2.ROTATE_180)  #Rotation important, make dynamic / accessible
 
             # Crop image around dart board
-            img = img[self.bnds['top']:self.bnds['bottom'], self.bnds['left']:self.bnds['right']]
+            if hasattr(self,'bnds'):
+                img = img[self.bnds['top']:self.bnds['bottom'], self.bnds['left']:self.bnds['right']]
 
         except: 
             print('Camera failed to take a picture')
@@ -164,7 +170,8 @@ class Camera:
         total_pixels = diff.size
         ratio = white_pixels/total_pixels
 
-        print(ratio)
+        if ratio > 0:
+            print(ratio)
 
         return ratio
 
