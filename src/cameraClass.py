@@ -42,7 +42,7 @@ class Camera:
 
         images = [0,0,0] # indexes: 0: before motion, 1: motion detected?, 2: after motion
 
-        minRatio = 0.0001 #Thresholds important - make accessible / dynamic - between 0 and 1
+        minRatio = 0.00005 #Thresholds important - make accessible / dynamic - between 0 and 1
         maxRatio = 0.009
 
         wait_for_two_equal_imgs = True
