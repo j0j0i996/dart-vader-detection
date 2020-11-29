@@ -38,40 +38,52 @@ class Camera:
     def motion_detection(self):
         
         t_repeat = 0.025 # Take a picure every t_repeat seconds
-        t_max = 0.15 # Maximum time the motion should take time - hereby we can distinguish between dart throw and human
-        t_pause_large = 4 # Time to pause after larger object or longer movement was detected (e.g. hand)
-        t_pause_long = 0.5
+        t_max = 0.1 # Maximum time the motion should take time - hereby we can distinguish between dart throw and human
 
         images = [0,0,0] # indexes: 0: before motion, 1: motion detected?, 2: after motion
 
         minRatio = 0.0001 #Thresholds important - make accessible / dynamic - between 0 and 1
-        maxRatio = 0.01
+        maxRatio = 0.009
+
+        wait_for_two_equal_imgs = True
 
         while True:
 
             #1. Step Check for motion
+            t = 0
+            time.sleep(t_repeat)
             img = self.take_picture()
-
             images[0] = images[1]
             images[1] = img
             
             if isinstance(images[0],int):
                 continue
-            
-            #C heck if object size is plausible
+
+            # Get ratio of differenct pixels between first and second image
             img_diff_ratio = Camera.get_img_diff_ratio(images[0], images[1])
-
-            if img_diff_ratio > maxRatio:
-                # Object too large
-                time.sleep(t_pause_large)
+            
+            if wait_for_two_equal_imgs and img_diff_ratio < minRatio:
+                wait_for_two_equal_imgs = False
                 continue
-            elif img_diff_ratio > minRatio and img_diff_ratio < maxRatio:
-                # Motion detected and no large object
-                t = t_repeat
 
+            if img_diff_ratio < minRatio:
+                # No object / too small
+                continue
+            elif img_diff_ratio > maxRatio:
+                # Object too large
+                print('Object too large')
+
+                # Reset images
+                images = [0,0,0] 
+                wait_for_two_equal_imgs = True
+                continue
+            else:
+                # Motion detected and no large object
                 # 2. Step: Check if motion stops within time
                 while t < t_max:
+                    t = t + t_repeat
                     time.sleep(t_repeat)
+
                     img = self.take_picture()
                     images[2] = img
                     
@@ -79,35 +91,34 @@ class Camera:
                     img_diff_ratio = Camera.get_img_diff_ratio(images[1], images[2])
                     if img_diff_ratio > minRatio: # Check if motion is still ongoing
                         t = t + t_repeat
+                        images[1] = images[2]
                         continue
                     else: # Motion stopped
                         break
-                
-                # Check if motion stopped in time
-                if t < t_max:
-                     # Final check if object size is plausible for a Dart
-                    img_diff_ratio = Camera.get_img_diff_ratio(images[0], images[2])
-                    if img_diff_ratio > minRatio and img_diff_ratio < maxRatio:
-                        t = t_repeat
-                        print('Detected')
-                        # Get image output path
-                        config = configparser.ConfigParser()
-                        config.read('config.ini')
-                        image_before_link = config['Paths']['image_before_link']
-                        image_after_link = config['Paths']['image_after_link']
-                        del config
-
-                        cv2.imwrite(image_before_link, images[0])
-                        cv2.imwrite(image_after_link, images[2])
-                        break
-
-                    else:
-                        continue
-
-                else: #Motion detected but was too long
-                    print('Too long')
-                    time.sleep(t_pause_long)
+                else:
+                    print('Motion took too long')
+                    
+                    # Reset images
                     images = [0,0,0]
+                    wait_for_two_equal_imgs = True
+                    continue
+
+                # Final check if object size is plausible for a Dart
+                img_diff_ratio = Camera.get_img_diff_ratio(images[0], images[2])
+                if img_diff_ratio > minRatio and img_diff_ratio < maxRatio:
+                    print('Detected')
+                    # Get image output path
+                    config = configparser.ConfigParser()
+                    config.read('config.ini')
+                    image_before_link = config['Paths']['image_before_link']
+                    image_after_link = config['Paths']['image_after_link']
+                    del config
+
+                    cv2.imwrite(image_before_link, images[0])
+                    cv2.imwrite(image_after_link, images[2])
+                    break
+
+                else:
                     continue
 
         self.dartThrow = dartThrow(image_before_link,image_after_link,self.board)
