@@ -19,7 +19,7 @@ def take_picture(img_name):
 
 @app.route('/wait_throw')
 def get_score():
-    camera.motion_detection()
+    camera.dart_motion_dect()
     return json.dumps({'score': camera.dartThrow.score})
 
 if __name__ == '__main__':
