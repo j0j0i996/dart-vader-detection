@@ -36,13 +36,21 @@ class Camera:
         return rel_pts
 
     def dart_motion_dect(self):
+
+        print('Waiting for motion')
         
         #Parameters
-
-        t_rep = 0.025 # Take a picure every t_repeat seconds
+        t_rep = 0.015 # Take a picure every t_repeat seconds
         t_max = 0.1 # Maximum time the motion should take time - hereby we can distinguish between dart throw and human
         min_ratio = 0.00005 #Thresholds important - make accessible / dynamic - between 0 and 1
         max_ratio = 0.009
+
+        # Get output paths
+        config = configparser.ConfigParser()
+        config.read('config.ini')
+        image_before_link = config['Paths']['image_before_link']
+        image_after_link = config['Paths']['image_after_link']
+        del config
 
         # Initialize loop
         dart_detected = False
@@ -50,45 +58,40 @@ class Camera:
         while not dart_detected:
 
             # Wait for motion
-            ratio_first, img_before = self.wait_for_img_diff_within_thresh(min_ratio, np.inf, t_rep)[:2]
-
-            # get size of object as well
+            img_before, img_start_motion, ratio_start_motion, _ = self.wait_for_img_diff_within_thresh(min_ratio, np.inf, t_rep)
 
             # Wait for motion to stop
-            img_after, t_motion = self.wait_for_img_diff_within_thresh(0, min_ratio, t_rep, start_image = img_before)[2:]
+            _, img_after, ratio_max_motion, t_motion = self.wait_for_img_diff_within_thresh(0, min_ratio, t_rep, start_image = img_start_motion)
 
-            # Get difference ratio of images
+            # Get maximum difference of motion
+            ratio_max = max(ratio_start_motion, ratio_max_motion)
+
+            # Get difference ratio of image befor motion and image after motion
             ratio_final = Camera.get_img_diff_ratio(img_before,img_after)
-                
-            if t_motion < t_max and ratio_final > ratio_first*0.5 and \
+            
+            # Criteria for being a dart:
+            # time of motion, maximum object smaller max treshold, size of final object in thresholds
+            if t_motion < t_max and ratio_max < max_ratio and \
                 ratio_final < max_ratio and ratio_final > min_ratio:
-                # Create dart element
                 dart_detected = True
             else:
                 print('Motion took too long or object to large')
 
-        print('Detected')
-        config = configparser.ConfigParser()
-        config.read('config.ini')
-        image_before_link = config['Paths']['image_before_link']
-        image_after_link = config['Paths']['image_after_link']
-        del config
-
+        print('Dart detected')
         cv2.imwrite(image_before_link, img_before)
         cv2.imwrite(image_after_link, img_after)
 
         self.dartThrow = dartThrow(image_before_link,image_after_link,self.board)
-        return True
 
     def wait_for_img_diff_within_thresh(self,min_ratio,max_ratio,t_rep, start_image = None):
         img_diff_ratio = -1
-
+        
         # Intialize while loop
         t = 0
+        ratio_max = 0
         if start_image is None:
             img1 = self.take_picture()
             time.sleep(t_rep)
-            print('sleeping')
         else:
             img1 = start_image
         
@@ -99,15 +102,15 @@ class Camera:
             
             t = t + t_rep
             time.sleep(t_rep)
-            print('sleeping')
             img1 = img2
             img2 = self.take_picture()
 
             # Get ratio of difference pixels between first and second image
             img_diff_ratio = Camera.get_img_diff_ratio(img1, img2)
-            print(img_diff_ratio)
 
-        return img_diff_ratio, img1, img2, t
+            ratio_max = max(ratio_max, img_diff_ratio)
+
+        return img1, img2, ratio_max, t
 
     # takes one picture and returns it
     def take_picture(self):
@@ -166,6 +169,8 @@ class Camera:
         white_pixels = cv2.countNonZero(thresh)
         total_pixels = diff.size
         ratio = white_pixels/total_pixels
+        if ratio > 0:
+            print(ratio)
 
         return ratio
 
