@@ -35,93 +35,82 @@ class Camera:
         }
         return rel_pts
 
-    def motion_detection(self):
+    def dart_motion_dect(self):
+
+        print('Waiting for motion')
         
-        t_repeat = 0.025 # Take a picure every t_repeat seconds
+        #Parameters
+        t_rep = 0.015 # Take a picure every t_repeat seconds
         t_max = 0.1 # Maximum time the motion should take time - hereby we can distinguish between dart throw and human
+        min_ratio = 0.00005 #Thresholds important - make accessible / dynamic - between 0 and 1
+        max_ratio = 0.009
 
-        images = [0,0,0] # indexes: 0: before motion, 1: motion detected?, 2: after motion
+        # Get output paths
+        config = configparser.ConfigParser()
+        config.read('config.ini')
+        image_before_link = config['Paths']['image_before_link']
+        image_after_link = config['Paths']['image_after_link']
+        del config
 
-        minRatio = 0.00005 #Thresholds important - make accessible / dynamic - between 0 and 1
-        maxRatio = 0.009
+        # Initialize loop
+        dart_detected = False
 
-        wait_for_two_equal_imgs = True
+        while not dart_detected:
 
-        while True:
+            # Wait for motion
+            img_before, img_start_motion, ratio_start_motion, _ = self.wait_for_img_diff_within_thresh(min_ratio, np.inf, t_rep)
 
-            #1. Step Check for motion
-            t = 0
-            time.sleep(t_repeat)
-            img = self.take_picture()
-            images[0] = images[1]
-            images[1] = img
+            # Wait for motion to stop
+            _, img_after, ratio_max_motion, t_motion = self.wait_for_img_diff_within_thresh(0, min_ratio, t_rep, start_image = img_start_motion)
+
+            # Get maximum difference of motion
+            ratio_max = max(ratio_start_motion, ratio_max_motion)
+
+            # Get difference ratio of image befor motion and image after motion
+            ratio_final = Camera.get_img_diff_ratio(img_before,img_after)
             
-            if isinstance(images[0],int):
-                continue
-
-            # Get ratio of differenct pixels between first and second image
-            img_diff_ratio = Camera.get_img_diff_ratio(images[0], images[1])
-            
-            if wait_for_two_equal_imgs and img_diff_ratio < minRatio:
-                wait_for_two_equal_imgs = False
-                continue
-
-            if img_diff_ratio < minRatio:
-                # No object / too small
-                continue
-            elif img_diff_ratio > maxRatio:
-                # Object too large
-                print('Object too large')
-
-                # Reset images
-                images = [0,0,0] 
-                wait_for_two_equal_imgs = True
-                continue
+            # Criteria for being a dart:
+            # time of motion, maximum object smaller max treshold, size of final object in thresholds
+            if t_motion < t_max and ratio_max < max_ratio and \
+                ratio_final < max_ratio and ratio_final > min_ratio:
+                dart_detected = True
             else:
-                # Motion detected and no large object
-                # 2. Step: Check if motion stops within time
-                while t < t_max:
-                    t = t + t_repeat
-                    time.sleep(t_repeat)
+                print('Motion took too long or object to large')
 
-                    img = self.take_picture()
-                    images[2] = img
-                    
-                    #Check if there is still movement
-                    img_diff_ratio = Camera.get_img_diff_ratio(images[1], images[2])
-                    if img_diff_ratio > minRatio: # Check if motion is still ongoing
-                        t = t + t_repeat
-                        images[1] = images[2]
-                        continue
-                    else: # Motion stopped
-                        break
-                else:
-                    print('Motion took too long')
-                    
-                    # Reset images
-                    images = [0,0,0]
-                    wait_for_two_equal_imgs = True
-                    continue
-
-                # Final check if object size is plausible for a Dart
-                img_diff_ratio = Camera.get_img_diff_ratio(images[0], images[2])
-                if img_diff_ratio > minRatio and img_diff_ratio < maxRatio:
-                    print('Detected')
-                    # Get image output path
-                    config = configparser.ConfigParser()
-                    config.read('config.ini')
-                    image_before_link = config['Paths']['image_before_link']
-                    image_after_link = config['Paths']['image_after_link']
-                    del config
-
-                    cv2.imwrite(image_before_link, images[0])
-                    cv2.imwrite(image_after_link, images[2])
-                    break
-
-                else:
-                    continue
+        print('Dart detected')
+        cv2.imwrite(image_before_link, img_before)
+        cv2.imwrite(image_after_link, img_after)
 
         self.dartThrow = dartThrow(image_before_link,image_after_link,self.board)
+
+    def wait_for_img_diff_within_thresh(self,min_ratio,max_ratio,t_rep, start_image = None):
+        img_diff_ratio = -1
+        
+        # Intialize while loop
+        t = 0
+        ratio_max = 0
+        if start_image is None:
+            img1 = self.take_picture()
+            time.sleep(t_rep)
+        else:
+            img1 = start_image
+        
+        img2 = self.take_picture()
+        img_diff_ratio = Camera.get_img_diff_ratio(img1, img2)
+
+        while img_diff_ratio < min_ratio or img_diff_ratio > max_ratio:
+            
+            t = t + t_rep
+            time.sleep(t_rep)
+            img1 = img2
+            img2 = self.take_picture()
+
+            # Get ratio of difference pixels between first and second image
+            img_diff_ratio = Camera.get_img_diff_ratio(img1, img2)
+
+            ratio_max = max(ratio_max, img_diff_ratio)
+
+        return img1, img2, ratio_max, t
 
     # takes one picture and returns it
     def take_picture(self):
@@ -180,7 +169,6 @@ class Camera:
         white_pixels = cv2.countNonZero(thresh)
         total_pixels = diff.size
         ratio = white_pixels/total_pixels
-
         if ratio > 0:
             print(ratio)
 
