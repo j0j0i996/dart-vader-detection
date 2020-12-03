@@ -40,10 +40,10 @@ class Camera:
         print('Waiting for motion')
         
         #Parameters
-        t_rep = 0.015 # Take a picure every t_repeat seconds
+        t_rep = 0.025 # Take a picure every t_repeat seconds
         t_max = 0.1 # Maximum time the motion should take time - hereby we can distinguish between dart throw and human
         min_ratio = 0.0005 #Thresholds important - make accessible / dynamic - between 0 and 1
-        max_ratio = 0.02
+        max_ratio = 0.035
 
         # Get output paths
         config = configparser.ConfigParser()
