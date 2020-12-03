@@ -27,7 +27,9 @@ if __name__ == '__main__':
     app.run(host='0.0.0.0', port='8090', debug=True) #, debug=True
     #img = cv2.imread('static/jpg/before.jpg')
     #imgWarp = cv2.warpPerspective(img,camera.board.h,(1000,1000))
-    #cv2.imwrite('static/jpg/warp.jpg', imgWarp)
+    #img = camera.take_picture()
+    #cv2.imwrite('static/jpg/test.jpg', img)
+    
 
     #print(camera.dartThrow.score)
     #app.run(debug=True, port='8090')

@@ -73,9 +73,9 @@ class dartThrow:
         # 3. Step Filter features by drawing line through them
         iteration_count = 1
         while True:
-            [vx, vy, x, y] = cv2.fitLine(features, cv2.DIST_HUBER, 0, 0.1, 0.1) #dist_L1 cost function is p(r)=r, dist_L2 cost function is p(r)=r^2
-            lefty = int((-x * vy / vx) + y)
-            righty = int(((width - x) * vy / vx) + y)
+            [vx, vy, x0, y0] = cv2.fitLine(features, cv2.DIST_HUBER, 0, 0.1, 0.1) #dist_L1 cost function is p(r)=r, dist_L2 cost function is p(r)=r^2
+            lefty = int((-x0 * vy / vx) + y0)
+            righty = int(((width - x0) * vy / vx) + y0)
 
             features_to_delete = []
             i = 0
@@ -87,7 +87,7 @@ class dartThrow:
                 # check distance to fitted line, only draw corners within certain range
                 p3 = np.array([x,y])
                 distance = abs(np.cross(p2-p1,p3-p1)/np.linalg.norm(p2-p1))
-                if distance > 10:  # threshold important -> make accessible
+                if distance > 10:  # threshold important
                     features_to_delete.append(i)
 
                 i += 1
@@ -112,7 +112,11 @@ class dartThrow:
             x,y = feature.ravel()
             p3 = np.array([x,y])
             distance = abs(np.cross(p2-p1,p3-p1)/np.linalg.norm(p2-p1))
-            if y < min_y and distance < 5: # threshold important -> make accessible
+            if y < min_y and distance < 5: # threshold impor((width - x0) * vy / vx) + y0tant
+
+                # correct x value of point to be on the line
+                x = int((y - y0) * vx / vy + x0)
+            
                 min_y = y
                 corr_x = x
         
