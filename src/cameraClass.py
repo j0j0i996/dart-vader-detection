@@ -27,11 +27,11 @@ class Camera:
         cv2.imwrite('static/jpg/calibration.jpg', img)
 
         rel_pts = {
-            "center": [335,323],
-            "left": [202,334],
-            "right": [469,308],
-            "top": [322,231],
-            "bottom": [340,372]
+            "center": [313,299],
+            "left": [93,294],
+            "right": [536,304],
+            "top": [304,164],
+            "bottom": [317,367]
         }
         return rel_pts
 
@@ -42,8 +42,8 @@ class Camera:
         #Parameters
         t_rep = 0.015 # Take a picure every t_repeat seconds
         t_max = 0.1 # Maximum time the motion should take time - hereby we can distinguish between dart throw and human
-        min_ratio = 0.00005 #Thresholds important - make accessible / dynamic - between 0 and 1
-        max_ratio = 0.009
+        min_ratio = 0.0005 #Thresholds important - make accessible / dynamic - between 0 and 1
+        max_ratio = 0.02
 
         # Get output paths
         config = configparser.ConfigParser()

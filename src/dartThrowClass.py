@@ -87,7 +87,7 @@ class dartThrow:
                 # check distance to fitted line, only draw corners within certain range
                 p3 = np.array([x,y])
                 distance = abs(np.cross(p2-p1,p3-p1)/np.linalg.norm(p2-p1))
-                if distance > 10:  # threshold important -> make accessible
+                if distance > 10:  # threshold important
                     features_to_delete.append(i)
 
                 i += 1
@@ -112,7 +112,7 @@ class dartThrow:
             x,y = feature.ravel()
             p3 = np.array([x,y])
             distance = abs(np.cross(p2-p1,p3-p1)/np.linalg.norm(p2-p1))
-            if y < min_y and distance < 5: # threshold important -> make accessible
+            if y < min_y and distance < 5: # threshold important
                 min_y = y
                 corr_x = x
         
