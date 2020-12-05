@@ -9,7 +9,7 @@ class dartThrow:
         self.board = board
         
         self.rel_carth_pos = self.get_rel_pos()
-        #self.rel_carth_pos = [297,201]
+        
         self.score = self.board.get_score(self.rel_carth_pos)
 
     def __repr__(self):
@@ -34,7 +34,7 @@ class dartThrow:
         # First step: Find dart -> Use contours to find bounding box around dart
         # Find contours
         diffCnts = diffBlur.copy()
-        ret, thresh = cv2.threshold(diffCnts, 30, 255, 0) #Important threshold
+        ret, thresh = cv2.threshold(diffCnts, 70, 255, 0) #Important threshold
         contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         diffCnts = cv2.cvtColor(diffBlur, cv2.COLOR_GRAY2BGR)
         img = cv2.drawContours(diffCnts, contours, -1, (255,255,255), 2)
