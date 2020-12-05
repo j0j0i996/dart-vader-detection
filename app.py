@@ -6,7 +6,7 @@ import src.cameraClass as camCls
 
 app = Flask(__name__)
 
-camera = camCls.Camera('Test',180)
+camera = camCls.Camera('Test',rot=180)
 
 @app.route('/')
 def index():
@@ -24,14 +24,8 @@ def get_score():
 
 if __name__ == '__main__':
     
-    app.run(host='0.0.0.0', port='8090', debug=True) #, debug=True
+    app.run(host='0.0.0.0', port='8090') #, debug=True
     #img = cv2.imread('static/jpg/before.jpg')
     #imgWarp = cv2.warpPerspective(img,camera.board.h,(1000,1000))
-    #img = camera.take_picture()
+    #img = camera.cap.read() 
     #cv2.imwrite('static/jpg/test.jpg', img)
-    
-
-    #print(camera.dartThrow.score)
-    #app.run(debug=True, port='8090')
-    #camera = camCls.Camera('Test',180)
-    #camera.motion_detection()

@@ -5,30 +5,25 @@ import sys
 import numpy as np
 import cv2
 import time
+from datetime import datetime
 from src.boardClass import *
 from src.dartThrowClass import *
+from src.videoCapture import *
 
 class Camera:
         
-    def __init__(self, name, rotation, width = 640, height = 480):
+    def __init__(self, name, src = 0, width = 640, height = 480, rot = 0):
         self.name = name
-        self.rotation = rotation
-        self.width = width
-        self.height = height
+        self.cap = VideoStream(src = src, width = width, height = height, rot = rot).start()
         self.rel_pts = self.calibration()
-        self.bnds = self.set_camera_bnds()
         self.board = Board(rel_pts = self.rel_pts)
         self.dartThrow = None
-        #self.dartThrow = dartThrow('test','test',self.board)
 
     def calibration(self):
 
-        img = self.take_picture()
-        cv2.imwrite('static/jpg/calibration.jpg', img)
-
         rel_pts = {
-            "center": [313,299],
-            "left": [93,294],
+            "center": [312,298],
+            "left": [92,293],
             "right": [536,304],
             "top": [304,164],
             "bottom": [317,367]
@@ -40,9 +35,9 @@ class Camera:
         print('Waiting for motion')
         
         #Parameters
-        t_rep = 0.025 # Take a picure every t_repeat seconds
-        t_max = 0.1 # Maximum time the motion should take time - hereby we can distinguish between dart throw and human
-        min_ratio = 0.0005 #Thresholds important - make accessible / dynamic - between 0 and 1
+        t_rep = 0.16 # Take a picure every t_repeat seconds
+        t_max = 0.48 # Maximum time the motion should take time - hereby we can distinguish between dart throw and human
+        min_ratio = 0.002 #Thresholds important - make accessible / dynamic - between 0 and 1
         max_ratio = 0.035
 
         # Get output paths
@@ -90,12 +85,12 @@ class Camera:
         t = 0
         ratio_max = 0
         if start_image is None:
-            img1 = self.take_picture()
+            img1 = self.cap.read()
             time.sleep(t_rep)
         else:
             img1 = start_image
         
-        img2 = self.take_picture()
+        img2 = self.cap.read()
         img_diff_ratio = Camera.get_img_diff_ratio(img1, img2)
 
         while img_diff_ratio < min_ratio or img_diff_ratio > max_ratio:
@@ -103,7 +98,7 @@ class Camera:
             t = t + t_rep
             time.sleep(t_rep)
             img1 = img2
-            img2 = self.take_picture()
+            img2 = self.cap.read()
 
             # Get ratio of difference pixels between first and second image
             img_diff_ratio = Camera.get_img_diff_ratio(img1, img2)
@@ -111,50 +106,6 @@ class Camera:
             ratio_max = max(ratio_max, img_diff_ratio)
 
         return img1, img2, ratio_max, t
-
-    # takes one picture and returns it
-    def take_picture(self):
-
-        try:
-            # define a video capture object 
-            cap = cv2.VideoCapture(0)
-            
-            #set the width and height
-            cap.set(3,self.width)
-            cap.set(4,self.height) 
-
-            ret, img = cap.read() 
-            img = cv2.rotate(img, cv2.ROTATE_180)  #Rotation important, make dynamic / accessible
-
-            # Crop image around dart board
-            if hasattr(self,'bnds'):
-                img = img[self.bnds['top']:self.bnds['bottom'], self.bnds['left']:self.bnds['right']]
-
-        except: 
-            print('Camera failed to take a picture')
-            print("Unexpected error:", sys.exc_info()[0])
-            raise
-
-        finally:
-            cap.release()
-
-        return img
-
-    def set_camera_bnds(self):
-
-        extend = 100
-        bnds = {'top': max(self.rel_pts['top'][1] - extend, 0),
-                'left': max(self.rel_pts['left'][0] - extend, 0),
-                'right': min(self.rel_pts['right'][0] + extend, self.width),
-                'bottom':min(self.rel_pts['bottom'][0] + extend, self.height)
-                }
-
-        # adjust relative points
-        shift = [bnds['left'],bnds['top']]
-        for k,v in self.rel_pts.items():
-            self.rel_pts[k] = [a - b for a, b in zip(self.rel_pts[k], shift)]
-
-        return bnds
 
     @staticmethod
     def get_img_diff_ratio(img1, img2):
@@ -169,7 +120,7 @@ class Camera:
         white_pixels = cv2.countNonZero(thresh)
         total_pixels = diff.size
         ratio = white_pixels/total_pixels
-        if ratio > 0:
+        if ratio > 0.0001:
             print(ratio)
 
         return ratio
