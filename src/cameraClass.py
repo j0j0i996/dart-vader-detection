@@ -16,19 +16,8 @@ class Camera:
         self.name = name
         self.cap = VideoStream(src = src, width = width, height = height, rot = rot).start()
         self.rel_pts = self.calibration()
-        self.board = Board(rel_pts = self.rel_pts)
+        self.board = Board(self.cap.read(), 20)
         self.dartThrow = None
-
-    def calibration(self):
-
-        rel_pts = {
-            "center": [312,298],
-            "left": [92,293],
-            "right": [536,304],
-            "top": [304,164],
-            "bottom": [317,367]
-        }
-        return rel_pts
 
     def dart_motion_dect(self):
 
