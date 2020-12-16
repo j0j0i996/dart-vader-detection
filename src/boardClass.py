@@ -71,23 +71,21 @@ class Board:
         print(score)
         return score
 
-    @staticmethod
-    def calibration():
-        src = get_src_points_optical(self.base_img_path, self.closest_field)
-        dest = get_dest_points()
+    def calibration(self):
+        src = self.get_src_points_optical()
+        dest = self.get_dest_points()
         h, status = cv2.findHomography(src, dest)
         return h
     
-    @staticmethod
-    def get_src_points_optical(img_path, closest_field):
+    def get_src_points_optical(self):
         #For now just outer circle
-        img = cv2.imread(img_path)
-        ellipses = get_ellipses(img)
+        img = cv2.imread(self.base_img_path)
+        ellipses = self.get_ellipses(img)
         rel_center = ellipses[-1][0]
         mask_black = np.zeros_like(img)
-        mask=cv2.ellipse(mask_black,ellipses[0] ,color=(255,255,255), thickness=-1)
+        mask = cv2.ellipse(mask_black,ellipses[0] ,color=(255,255,255), thickness=-1)
         result_circle_complete = cv2.bitwise_and(img,mask)
-        lines = get_lines_outer_circle(result_circle_complete, center)
+        lines = self.get_lines(result_circle_complete, rel_center)
         
         src_points = np.empty([len(lines)*2,2])
         src_pos = 0
@@ -100,7 +98,7 @@ class Board:
         # Shift src points depending on pos of camera
         # Convention: clockwise start from point between 20 and 1
         fields = [20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5]
-        idx = fields.index(closest_field)
+        idx = fields.index(self.closest_field)
         src_points = np.roll(src_points, -idx, axis=0)
 
         return src_points
@@ -112,21 +110,19 @@ class Board:
         y = y0 - self.radius * np.sin(phi * (np.pi/180))
         return [x,y]
 
-    @staticmethod
-    def get_dest_points():
+    def get_dest_points(self):
 
         dest_points = np.empty([20,2])
         radius = 340
         for i in range(20):
             angle = 90 - 180/20 - i * 360 / 20
-            dest_points[i] = np.array(pol2cath(radius,angle))
+            dest_points[i] = np.array(self.pol2cath(radius,angle))
 
         print(dest_points)
         
         return dest_points
 
-    @staticmethod
-    def get_lines_outer_circle(img, rel_center):
+    def get_lines(self, img, rel_center):
         gray_img_dark = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         
         bil = cv2.bilateralFilter(gray_img_dark, 8, 70, 70)
@@ -163,8 +159,7 @@ class Board:
         else:
             return None
 
-    @staticmethod
-    def board_filter(img):
+    def board_filter(self, img):
 
             #Thresholds
             low_green = np.array([25, 35, 72])
@@ -183,10 +178,9 @@ class Board:
 
             return masked_image 
 
-    @staticmethod
-    def get_ellipses(base_img):
+    def get_ellipses(self, base_img):
 
-        im1 = board_filter(base_img)
+        im1 = self.board_filter(base_img)
         gray_img_dark = cv2.cvtColor(im1,cv2.COLOR_BGR2GRAY)
 
         _, gray_img_dark = cv2.threshold(gray_img_dark, 150, 255, cv2.THRESH_BINARY)
