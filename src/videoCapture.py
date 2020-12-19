@@ -1,6 +1,7 @@
 
 # import the necessary packages
 from threading import Thread
+import concurrent.futures
 import cv2
 
 rotations = [None, cv2.ROTATE_90_CLOCKWISE, cv2.ROTATE_180, cv2.ROTATE_90_COUNTERCLOCKWISE]
@@ -22,8 +23,9 @@ class VideoStream:
 
     def start(self):
         # start the thread to read frames from the video stream
+        #with concurrent.futures.ThreadPoolExecutor() as executor:
+            #executor.submit(self.update)
         Thread(target=self.update, args=()).start()
-        return self
 
     def update(self):
         # keep looping infinitely until the thread is stopped

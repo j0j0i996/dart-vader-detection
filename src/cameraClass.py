@@ -14,15 +14,19 @@ class Camera:
         
     def __init__(self, src = 0, width = 640, height = 480, rot = 0):
 
-        self.cap = VideoStream(src = src, width = width, height = height, rot = rot).start()
+        self.cap = VideoStream(src = src, width = width, height = height, rot = rot)
+        self.cap.start()
+        time.sleep(1)
         img = self.cap.read()
+        self.cap.stop()
         path = 'static/jpg/base_img' + str(src) + '.jpg'
         cv2.imwrite(path, img)
         self.board = Board(path, 20)
         self.dartThrow = None
 
     def dart_motion_dect(self):
-
+        
+        self.cap.start()
         print('Waiting for motion')
         
         #Parameters

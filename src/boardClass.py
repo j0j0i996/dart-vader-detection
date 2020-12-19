@@ -5,7 +5,7 @@ class Board:
 
     def __init__(self, base_img_path, closest_field = 20):
         self.std_center = [400, 400]
-        self.radius = 340
+        self.radius = 170
         self.base_img_path = base_img_path
         self.closest_field = closest_field
         self.h = self.calibration()
@@ -113,44 +113,52 @@ class Board:
     def get_dest_points(self):
 
         dest_points = np.empty([20,2])
-        radius = 340
         for i in range(20):
             angle = 90 - 180/20 - i * 360 / 20
-            dest_points[i] = np.array(self.pol2cath(radius,angle))
+            dest_points[i] = np.array(self.pol2cath(angle))
 
         print(dest_points)
         
         return dest_points
 
     def get_lines(self, img, rel_center):
-        gray_img_dark = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        
-        bil = cv2.bilateralFilter(gray_img_dark, 8, 70, 70)
-        edges_high_thresh = cv2.Canny(bil, 80, 130)
-        
-        lines = cv2.HoughLinesP(edges_high_thresh,  1, 1*np.pi/180, 70, minLineLength=150, maxLineGap=250)
 
+        gray_img_dark = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        bil = cv2.bilateralFilter(gray_img_dark, 8, 70, 70)
+        canny = cv2.Canny(bil, 80, 130)
+        kernel = np.ones((2,2),np.float32)
+        dilation = cv2.dilate(canny,kernel,iterations = 1)
+
+        lines = cv2.HoughLinesP(dilation,  1, 1*np.pi/180, 45, minLineLength=80, maxLineGap=200)
         mask_black = np.zeros_like(img)
 
         # Line Cleaning
         line_list = []
         angles = []
+        min_angle = 3 # min angle between 2 lines
         x_list = []
         y_list = []
         for line in lines:
             x1, y1, x2, y2 = line[0]
             p1 = np.array([x1,y1])
             p2 = np.array([x2,y2])
+            #cv2.line(gray_img_dark,(x1,y1), (x2, y2),0, 3)
 
             dist2center = abs(np.cross(p2-p1,rel_center-p1)/np.linalg.norm(p2-p1))
             
-            if dist2center < 10:
+            if dist2center < 2:
                 angle = np.rad2deg(np.arctan((y2-y1)/(x2-x1)))
-                angle = round(angle/3)*3
                 
-                if angle not in angles:
-                    angles.append(angle)    
+                if angles == []:
+                    angles.append(angle)
                     line_list.append(line)
+                else:
+                    diff_angles = np.abs(angles - angle)
+                    smallest_diff = min(diff_angles)
+
+                    if smallest_diff > min_angle:
+                        angles.append(angle)    
+                        line_list.append(line)
 
         if len(line_list) == 10:
             #Sort after angle
@@ -159,46 +167,58 @@ class Board:
         else:
             return None
 
-    def board_filter(self, img):
+    def get_ellipses(self, img):
 
-            #Thresholds
-            low_green = np.array([25, 35, 72])
-            high_green = np.array([102, 255, 255])
-            low_red = np.array([150, 15, 230])#np.array([161, 155, 84])
-            high_red = np.array([175, 255, 255])#np.array([179, 255, 255])
+        hsv_frame = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
-            #Filter
-            hsv_frame = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+        # create white image
+        img_white = np.zeros_like(img)
+        img_white.fill(255)
 
-            green_mask = cv2.inRange(hsv_frame, low_green, high_green)
-            green = cv2.bitwise_and(img, img, mask=green_mask)
-            red_mask = cv2.inRange(hsv_frame, low_red, high_red)
-            red = cv2.bitwise_and(img, img, mask=red_mask)
-            masked_image = cv2.add(red,green)
+        #Thresholds
+        low_green = np.array([31, 60, 120])
+        high_green = np.array([95, 255, 255])
+        green_mask = cv2.inRange(hsv_frame, low_green, high_green)
+        green = cv2.bitwise_and(img_white, img_white, mask=green_mask)
+        
+        # Range for lower red
+        low_red = np.array([0, 15, 220])#np.array([161, 155, 84])
+        high_red = np.array([12,190, 255])#np.array([179, 255, 255])
+        mask1 = cv2.inRange(hsv_frame, low_red, high_red)
 
-            return masked_image 
+        # Range for upper red
+        low_red = np.array([150, 15, 220])#np.array([161, 155, 84])
+        high_red = np.array([180, 190, 255])#np.array([179, 255, 255])
+        mask2 = cv2.inRange(hsv_frame, low_red, high_red)
 
-    def get_ellipses(self, base_img):
+        red_mask = mask1 + mask2
+        red = cv2.bitwise_and(img_white, img_white, mask=red_mask)
+        masked_img = cv2.add(red,green)   
 
-        im1 = self.board_filter(base_img)
-        gray_img_dark = cv2.cvtColor(im1,cv2.COLOR_BGR2GRAY)
+        gray_img_dark = cv2.cvtColor(masked_img,cv2.COLOR_BGR2GRAY)
 
-        _, gray_img_dark = cv2.threshold(gray_img_dark, 150, 255, cv2.THRESH_BINARY)
-        gray_img_dark = cv2.bilateralFilter(gray_img_dark, 8, 100, 100)
+        _, thresh = cv2.threshold(gray_img_dark, 150, 255, cv2.THRESH_BINARY)
+        thresh = cv2.bilateralFilter(thresh, 8, 100, 100)
 
-        contours,_ = cv2.findContours(gray_img_dark, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+        contours, _ = cv2.findContours(thresh, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
         cntsSorted = sorted(contours, key=cv2.contourArea, reverse=True)
-        img_cnts = cv2.drawContours(im1, cntsSorted, -1, (255,255,255), 2)
 
         # Ellipse Cleaning
         ellipses = []
         if len(cntsSorted) > 10:
             cntsSorted = cntsSorted[:10]
         for cnt in cntsSorted:
-            ellipse = cv2.fitEllipse(cnt)
-            
+            center, [width, height], angle = cv2.fitEllipse(cnt)
+            width = width - 3
+            height = height - 3
+            ellipse = center, [width, height], angle
+
             if cv2.pointPolygonTest(cntsSorted[0],(ellipse[0][0],ellipse[0][1]),False) >= 0:
-                #make sure that all other ellipses are inside the big one
-                ellipses.append(ellipse)   
+                ellipses.append(ellipse)
+
+        # get smallest and third smallest ellipses
+        sizes = [x[1][0] * x[1][1] for x in ellipses]
+        index = np.argsort(sizes)
+        ellipses = [ellipses[index[0]], ellipses[index[2]]]
         
         return ellipses
