@@ -6,7 +6,9 @@ import src.cameraClass as camCls
 
 app = Flask(__name__)
 
-camera = camCls.Camera(src=2, rot=180)
+camera1 = camCls.Camera(src=0, rot=180, closest_field = 1)
+camera2 = camCls.Camera(src=2, rot=180, closest_field = 20)
+camera3 = camCls.Camera(src=4, rot=180, closest_field = 3)
 
 @app.route('/')
 def index():

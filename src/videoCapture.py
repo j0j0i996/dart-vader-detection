@@ -10,7 +10,11 @@ class VideoStream:
     def __init__(self, src=0, width = 640, height = 480, rot = 0):
         # initialize the video camera stream and read the first frame
         # from the stream
-        self.stream = cv2.VideoCapture(src)
+        try:
+            self.stream = cv2.VideoCapture(src)
+        except:
+            print("Cam is invalid.")
+
         self.stream.set(3, width)
         self.stream.set(4, height)
         self.stream.set(cv2.CAP_PROP_EXPOSURE,-3)

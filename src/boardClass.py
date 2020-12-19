@@ -3,7 +3,7 @@ import cv2
 
 class Board:
 
-    def __init__(self, base_img_path, closest_field = 20):
+    def __init__(self, h = None, closest_field = 20, base_img_path = None):
         self.std_center = [400, 400]
         self.radius = 170
         self.base_img_path = base_img_path
@@ -13,7 +13,6 @@ class Board:
     def __repr__(self):
         return 'Relative board position: \n{} \nStandard board position: \n{} \nHomography matrix \n {} \n'\
             .format(self.rel_pts, self.std_pts, self.h)
-
 
     def get_score(self, rel_carth_pos):
             std_carth_pos = self.rel2std(rel_carth_pos)
@@ -75,15 +74,16 @@ class Board:
         src = self.get_src_points_optical()
         dest = self.get_dest_points()
         h, status = cv2.findHomography(src, dest)
+        print(h)
         return h
     
     def get_src_points_optical(self):
         #For now just outer circle
         img = cv2.imread(self.base_img_path)
         ellipses = self.get_ellipses(img)
-        rel_center = ellipses[-1][0]
+        rel_center = ellipses[0][0]
         mask_black = np.zeros_like(img)
-        mask = cv2.ellipse(mask_black,ellipses[0] ,color=(255,255,255), thickness=-1)
+        mask = cv2.ellipse(mask_black,ellipses[1] ,color=(255,255,255), thickness=-1)
         result_circle_complete = cv2.bitwise_and(img,mask)
         lines = self.get_lines(result_circle_complete, rel_center)
         
@@ -103,7 +103,7 @@ class Board:
 
         return src_points
 
-    def pol2cath(phi):
+    def pol2cath(self, phi):
         x0 = self.std_center[0]
         y0 = self.std_center[1]
         x = self.radius * np.cos(phi * (np.pi/180)) + x0
@@ -116,8 +116,6 @@ class Board:
         for i in range(20):
             angle = 90 - 180/20 - i * 360 / 20
             dest_points[i] = np.array(self.pol2cath(angle))
-
-        print(dest_points)
         
         return dest_points
 
@@ -176,20 +174,20 @@ class Board:
         img_white.fill(255)
 
         #Thresholds
-        low_green = np.array([31, 60, 120])
-        high_green = np.array([95, 255, 255])
+        low_green = np.array([36, 74, 83])
+        high_green = np.array([94, 255, 255])
         green_mask = cv2.inRange(hsv_frame, low_green, high_green)
         green = cv2.bitwise_and(img_white, img_white, mask=green_mask)
         
         # Range for lower red
-        low_red = np.array([0, 15, 220])#np.array([161, 155, 84])
-        high_red = np.array([12,190, 255])#np.array([179, 255, 255])
+        low_red = np.array([0, 55, 212])
+        high_red = np.array([25,117, 255]) 
         mask1 = cv2.inRange(hsv_frame, low_red, high_red)
 
         # Range for upper red
-        low_red = np.array([150, 15, 220])#np.array([161, 155, 84])
-        high_red = np.array([180, 190, 255])#np.array([179, 255, 255])
-        mask2 = cv2.inRange(hsv_frame, low_red, high_red)
+        low_red_2 = np.array([139, 25, 216])
+        high_red_2 = np.array([255, 123, 255])
+        mask2 = cv2.inRange(hsv_frame, low_red_2, high_red_2)
 
         red_mask = mask1 + mask2
         red = cv2.bitwise_and(img_white, img_white, mask=red_mask)
@@ -200,7 +198,7 @@ class Board:
         _, thresh = cv2.threshold(gray_img_dark, 150, 255, cv2.THRESH_BINARY)
         thresh = cv2.bilateralFilter(thresh, 8, 100, 100)
 
-        contours, _ = cv2.findContours(thresh, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
+        contours, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
         cntsSorted = sorted(contours, key=cv2.contourArea, reverse=True)
 
         # Ellipse Cleaning

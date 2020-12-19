@@ -12,17 +12,21 @@ from src.videoCapture import *
 
 class Camera:
         
-    def __init__(self, src = 0, width = 640, height = 480, rot = 0):
+    def __init__(self, src = 0, closest_field = 20, width = 640, height = 480, rot = 0):
 
         self.cap = VideoStream(src = src, width = width, height = height, rot = rot)
-        self.cap.start()
-        time.sleep(1)
-        img = self.cap.read()
-        self.cap.stop()
-        path = 'static/jpg/base_img' + str(src) + '.jpg'
-        cv2.imwrite(path, img)
-        self.board = Board(path, 20)
+        #self.cap.start()
+        #time.sleep(2)
+        #img = self.cap.read()
+        #self.cap.stop()
+
+        #Check if data is available in SQL
+        #self.board = Board(h = ...self.base_img)
+
+        self.base_img = 'static/jpg/base_img' + str(src) + '.jpg'
+        self.board = Board(closest_field = closest_field, base_img_path = self.base_img)
         self.dartThrow = None
+
 
     def dart_motion_dect(self):
         
