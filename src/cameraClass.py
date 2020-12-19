@@ -9,6 +9,10 @@ from datetime import datetime
 from src.boardClass import *
 from src.dartThrowClass import *
 from src.videoCapture import *
+import sqlite3 
+
+conn = sqlite3.connect('camera.db')
+c = conn.cursor()
 
 class Camera:
         
