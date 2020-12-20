@@ -3,12 +3,10 @@ import cv2
 
 class Board:
 
-    def __init__(self, h = None, closest_field = 20, base_img_path = None):
+    def __init__(self, h = None):
         self.std_center = [400, 400]
         self.radius = 170
-        self.base_img_path = base_img_path
-        self.closest_field = closest_field
-        self.h = self.calibration()
+        self.h = h
 
     def __repr__(self):
         return 'Relative board position: \n{} \nStandard board position: \n{} \nHomography matrix \n {} \n'\
@@ -41,10 +39,14 @@ class Board:
 
         #arctan is mapping between -180 and 180, but we want an angle between 0 and 360 to simplify later tasks
         phi = phi % 360
+        print(phi)
+
+        print([rho,phi])
 
         return [rho,phi]
 
     def pol2score(self, std_polar_pos):
+
         # possible single scores of the dartboard, starting from 6 (phi = 0 for polar coordinate)
         fields = [20,5,12,9,14,11,8,16,7,19,3,17,2,15,10,6,13,4,18,1]
 
@@ -70,16 +72,15 @@ class Board:
         print(score)
         return score
 
-    def calibration(self):
-        src = self.get_src_points_optical()
+    def calibration(self, img, closest_field = 20):
+        src = self.get_src_points_optical(img, closest_field = closest_field)
         dest = self.get_dest_points()
         h, status = cv2.findHomography(src, dest)
         print(h)
-        return h
+        self.h = h
     
-    def get_src_points_optical(self):
+    def get_src_points_optical(self, img, closest_field):
         #For now just outer circle
-        img = cv2.imread(self.base_img_path)
         ellipses = self.get_ellipses(img)
         rel_center = ellipses[0][0]
         mask_black = np.zeros_like(img)
@@ -98,7 +99,7 @@ class Board:
         # Shift src points depending on pos of camera
         # Convention: clockwise start from point between 20 and 1
         fields = [20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5]
-        idx = fields.index(self.closest_field)
+        idx = fields.index(closest_field)
         src_points = np.roll(src_points, -idx, axis=0)
 
         return src_points

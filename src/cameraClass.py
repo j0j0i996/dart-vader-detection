@@ -1,6 +1,6 @@
 from datetime import datetime
 import configparser
-import src.dropbox_integration as dbx_int
+import src.db_handler as db
 import sys
 import numpy as np
 import cv2
@@ -10,27 +10,40 @@ from src.boardClass import *
 from src.dartThrowClass import *
 from src.videoCapture import *
 import sqlite3 
-
-conn = sqlite3.connect('camera.db')
-c = conn.cursor()
+import json
 
 class Camera:
         
     def __init__(self, src = 0, closest_field = 20, width = 640, height = 480, rot = 0):
 
+        self.src = src
         self.cap = VideoStream(src = src, width = width, height = height, rot = rot)
-        #self.cap.start()
-        #time.sleep(2)
-        #img = self.cap.read()
-        #self.cap.stop()
 
         #Check if data is available in SQL
-        #self.board = Board(h = ...self.base_img)
+        h = db.get_trafo(self.src)
+    
+        if h is not None:
+            self.board = Board(h = h)
+            print('available')
+        else:
+            self.board = Board()
+            self.calibrate_board(closest_field = closest_field)
+            print('calibrated')
+            db.write_trafo(src, self.board.h)
 
-        self.base_img = 'static/jpg/base_img' + str(src) + '.jpg'
-        self.board = Board(closest_field = closest_field, base_img_path = self.base_img)
         self.dartThrow = None
 
+    def calibrate_board(self, closest_field):
+        self.cap.start()
+        time.sleep(1)
+        img = self.cap.read()
+        self.cap.stop()
+
+        #img = cv2.imread('static/jpg/base_img{}.jpg'.format(self.src))
+
+        self.board.calibration(img, closest_field = closest_field)
+        h = self.board.h
+        db.write_trafo(self.src, h)
 
     def dart_motion_dect(self):
         
