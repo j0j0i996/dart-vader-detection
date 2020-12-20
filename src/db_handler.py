@@ -58,7 +58,7 @@ def write_trafo(src, h):
     resonse = c.fetchone()
 
     if resonse is not None:
-        c.execute("UPDATE calibrations SET h = ? WHERE src = ?", (src,h))
+        c.execute("UPDATE calibrations SET h = ? WHERE src = ?", (h,src))
     else:
         c.execute("INSERT INTO calibrations VALUES (?, ?)", (src,h))
 
@@ -66,10 +66,10 @@ def write_trafo(src, h):
     conn.close()
 
 if __name__ == '__main__':
-    delete_db()
-    create_db()
+    #delete_db()
+    #create_db()
 
     #h = np.array([2,2])
     #write_trafo(10, h)
-    #h = get_trafo(10)
-    #print(h)
+    h = get_trafo(4)
+    print(h)

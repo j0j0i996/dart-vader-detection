@@ -3,9 +3,9 @@ import cv2
 
 class Board:
 
+    std_center = [400, 400]
+
     def __init__(self, h = None):
-        self.std_center = [400, 400]
-        self.radius = 170
         self.h = h
 
     def __repr__(self):
@@ -14,7 +14,11 @@ class Board:
 
     def get_score(self, rel_carth_pos):
             std_carth_pos = self.rel2std(rel_carth_pos)
+            print('std_carth_pos')
+            print(std_carth_pos)
             std_polar_pos = self.carth2pol(std_carth_pos)
+            print('std_polar_pos')
+            print(std_polar_pos)
             score = self.pol2score(std_polar_pos)
             return score
 
@@ -33,17 +37,18 @@ class Board:
     def carth2pol(self, std_cath_pos):
 
         x = std_cath_pos[0] - self.std_center[0]
-        y = self.std_center - std_cath_pos[1]
-        rho = np.sqrt(x**2 + y**2)
-        phi = np.arctan2(y, x)/(2*np.pi)*360 + 90 + 360/20/2  # 0 degree is intersect between 20 and 1
+        print('x')
+        print(x)
+        y = self.std_center[1] - std_cath_pos[1]
+        print('y')
+        print(y)
+        r = np.sqrt(x**2 + y**2)
+        phi = np.arctan2(y, x)/(2*np.pi)*360 - 90 + 360/20/2  # 0 degree is intersect between 20 and 1
 
         #arctan is mapping between -180 and 180, but we want an angle between 0 and 360 to simplify later tasks
         phi = phi % 360
-        print(phi)
 
-        print([rho,phi])
-
-        return [rho,phi]
+        return [r,phi]
 
     def pol2score(self, std_polar_pos):
 
@@ -54,7 +59,7 @@ class Board:
         single_score = fields[int(std_polar_pos[1]/360*20)]
 
         # map radius to multipliers or exceptions (bullseye)
-        r_in_mm = 340
+        r_in_mm = std_polar_pos[0]
 
         if r_in_mm < 6.35: 
             score = 50
@@ -76,7 +81,6 @@ class Board:
         src = self.get_src_points_optical(img, closest_field = closest_field)
         dest = self.get_dest_points()
         h, status = cv2.findHomography(src, dest)
-        print(h)
         self.h = h
     
     def get_src_points_optical(self, img, closest_field):
@@ -104,20 +108,21 @@ class Board:
 
         return src_points
 
-    def pol2cath(self, phi):
-        x0 = self.std_center[0]
-        y0 = self.std_center[1]
-        x = self.radius * np.cos(phi * (np.pi/180)) + x0
-        y = y0 - self.radius * np.sin(phi * (np.pi/180))
+    @classmethod
+    def pol2cath(cls, r, phi):
+        x0 = cls.std_center[0]
+        y0 = cls.std_center[1]
+        x = r * np.cos(phi * (np.pi/180)) + x0
+        y = y0 - r * np.sin(phi * (np.pi/180))
         return [x,y]
 
-    def get_dest_points(self):
-
+    @classmethod
+    def get_dest_points(cls):
         dest_points = np.empty([20,2])
+        r = 107 # Important -> outer edge of triple ring
         for i in range(20):
             angle = 90 - 180/20 - i * 360 / 20
-            dest_points[i] = np.array(self.pol2cath(angle))
-        
+            dest_points[i] = np.array(cls.pol2cath(r, angle))
         return dest_points
 
     def get_lines(self, img, rel_center):

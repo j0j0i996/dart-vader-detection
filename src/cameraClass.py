@@ -24,11 +24,9 @@ class Camera:
     
         if h is not None:
             self.board = Board(h = h)
-            print('available')
         else:
             self.board = Board()
             self.calibrate_board(closest_field = closest_field)
-            print('calibrated')
             db.write_trafo(src, self.board.h)
 
         self.dartThrow = None
@@ -48,6 +46,7 @@ class Camera:
     def dart_motion_dect(self):
         
         self.cap.start()
+        time.sleep(0.5)
         print('Waiting for motion')
         
         #Parameters
@@ -75,15 +74,14 @@ class Camera:
             _, img_after, ratio_max_motion, t_motion = self.wait_for_img_diff_within_thresh(0, min_ratio, t_rep, start_image = img_start_motion)
 
             # Get maximum difference of motion
-            ratio_max = max(ratio_start_motion, ratio_max_motion)
+            ratio_max = max(ratio_start_motion, ratio_max_motion)  # ! currently unused
 
             # Get difference ratio of image befor motion and image after motion
             ratio_final = Camera.get_img_diff_ratio(img_before,img_after)
             
             # Criteria for being a dart:
             # time of motion, maximum object smaller max treshold, size of final object in thresholds
-            if t_motion < t_max and ratio_max < max_ratio and \
-                ratio_final < max_ratio and ratio_final > min_ratio:
+            if t_motion < t_max and ratio_final < max_ratio and ratio_final > min_ratio: # ratio_max < max_ratio and
                 dart_detected = True
             else:
                 print('Motion took too long or object to large')

@@ -17,7 +17,7 @@ class VideoStream:
 
         self.stream.set(3, width)
         self.stream.set(4, height)
-        self.stream.set(cv2.CAP_PROP_EXPOSURE,-3)
+        self.stream.set(cv2.CAP_PROP_EXPOSURE,-2)
 
         (self.grabbed, self.frame) = self.stream.read()
         self.rotCode = rotations[int(rot/90)]
