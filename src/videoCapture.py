@@ -29,7 +29,7 @@ class VideoStream:
         # start the thread to read frames from the video stream
         #with concurrent.futures.ThreadPoolExecutor() as executor:
             #executor.submit(self.update)
-        Thread(target=self.update, args=()).start()
+        self.t = Thread(target=self.update, args=()).start()
 
     def update(self):
         # keep looping infinitely until the thread is stopped
@@ -37,7 +37,7 @@ class VideoStream:
             # if the thread indicator variable is set, stop the thread
             if self.stopped:
                 return
-
+            
             # otherwise, read the next frame from the stream
             (self.grabbed, self.frame) = self.stream.read()
 
@@ -45,7 +45,7 @@ class VideoStream:
         # return the frame most recently read
         if self.rotCode is not None:
             self.frame = cv2.rotate(self.frame, self.rotCode)
-        return self.frame
+        return self.frame, self.grabbed
 
     def stop(self):
         # indicate that the thread should be stopped
