@@ -3,136 +3,157 @@ import numpy as np
 
 class dartThrow:
 
-    def __init__(self, img_before_link, img_after_link, board) :
+    def __init__(self, img_before_link, img_after_link):
         self.img_before_link = img_before_link
         self.img_after_link = img_after_link
-        self.board = board
-        
-        self.rel_carth_pos = self.get_rel_pos()
-        
-        self.score = self.board.get_score(self.rel_carth_pos)
 
     def __repr__(self):
         return 'RelCarth Pos: {} \n\nStd Carth Pos: {} \n'\
             .format(self.rel_carth_pos, self.std_carth_pos)
 
-    def get_rel_pos(self):
+    def get_position(self, format = 'line'): #alternative: format = 'point
 
-        img_bf = cv2.imread(self.img_before_link)
-        img_af = cv2.imread(self.img_after_link)
+        imgBf = cv2.imread(self.img_before_link)
+        imgAf = cv2.imread(self.img_after_link)
 
-        diff = cv2.absdiff(img_bf, img_af)
+        diff = cv2.absdiff(imgBf, imgAf)
         height, width = diff.shape[:2]
 
         # transform to gray scale
-        diffGray = cv2.cvtColor(diff,cv2.COLOR_BGR2GRAY)
+        diff_gray = cv2.cvtColor(diff,cv2.COLOR_BGR2GRAY)
 
-        # add blur
-        kernel = np.ones((5,5),np.float32)/25
-        diffBlur = cv2.filter2D(diffGray,-1,kernel)
+        #add blur
+        kernel = np.ones((3,3),np.float32)/9
+        diffBlur = cv2.filter2D(diff_gray,-1,kernel)
 
         # First step: Find dart -> Use contours to find bounding box around dart
-        # Find contours
-        diffCnts = diffBlur.copy()
-        ret, thresh = cv2.threshold(diffCnts, 70, 255, 0) #Important threshold
-        contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-        diffCnts = cv2.cvtColor(diffBlur, cv2.COLOR_GRAY2BGR)
-        img = cv2.drawContours(diffCnts, contours, -1, (255,255,255), 2)
+        cnt, box_dart = self.get_dart_cnt_and_box(diffBlur)
 
-        bnds = {'top':height, 'left':width, 'right':0, 'bottom':0}
+        # Second: Get features insed dart box and fit line through them
+        line = self.get_line(diffBlur, box_dart)
 
-        # computes the bounding box for all contours
-        for contour in contours:
-            (x,y,w,h) = cv2.boundingRect(contour)
-            bnds['left'], bnds['right'] = min(x, bnds['left']), max(x+w, bnds['right'])
-            bnds['top'], bnds['bottom'] = min(y, bnds['top']), max(y+h, bnds['bottom'])
-        
-        #2. Step: Sensible feature detection inside the detecting bounding box
-
-        #Increase box boundaries
-        change_sides = {'top':-50, 'left':-20, 'right':20, 'bottom':0}
-        for k in bnds.keys():
-            bnds[k]=bnds[k]+change_sides[k]
-
-        #For testing
-        if bnds['right'] - bnds['left'] > 0 and bnds['bottom'] - bnds['top'] > 0:
-            cv2.rectangle(diffCnts, (bnds['left'], bnds['top']), (bnds['right'], bnds['bottom']), (255, 0, 0), 2)
-
-        diffFeat = diffBlur.copy()[bnds['top']:bnds['bottom'], bnds['left']:bnds['right']]
-
-        #For testing
-        diffFeatFiltered = diffBlur.copy()[bnds['top']:bnds['bottom'], bnds['left']:bnds['right']]
-
-        features = cv2.goodFeaturesToTrack(diffFeat, 640, 0.0008, 1, mask=None, blockSize=3, useHarrisDetector=1, k=0.06)
-
-        #For testing
-        for feature in features:
-            x,y = feature.ravel()
-            cv2.circle(diffFeat,(x,y),3,255,-1)
-
-        # 3. Step Filter features by drawing line through them
-        iteration_count = 1
-        while True:
-            [vx, vy, x0, y0] = cv2.fitLine(features, cv2.DIST_HUBER, 0, 0.1, 0.1) #dist_L1 cost function is p(r)=r, dist_L2 cost function is p(r)=r^2
-            lefty = int((-x0 * vy / vx) + y0)
-            righty = int(((width - x0) * vy / vx) + y0)
-
-            features_to_delete = []
-            i = 0
+        if format == 'line':
+            [vx, vy, x0, y0] = line
+            lefty = float((-x0 * vy / vx) + y0)
+            righty = float((width - x0) * vy / vx + y0)
             p1 = np.array([0,lefty])
             p2 = np.array([width-1, righty])
-            for feature in features:
-                x, y = feature.ravel()
 
-                # check distance to fitted line, only draw corners within certain range
-                p3 = np.array([x,y])
-                distance = abs(np.cross(p2-p1,p3-p1)/np.linalg.norm(p2-p1))
-                if distance > 10:  # threshold important
-                    features_to_delete.append(i)
+            #Testing
+            cv2.line(imgAf,(0,int(lefty)),(width-1,int(righty)),(255,255,0),)
+            cv2.imwrite('static/jpg/dart_line.jpg',imgAf)
+            return p1, p2
+            
+        elif format == 'point':
+            pos = self.get_tip_pos(cnt, line, width)
 
-                i += 1
-            if features_to_delete ==[]:
-                break
+            #Testing
+            cv2.drawMarker(imgAf, (int(pos[0]), int(pos[1])), color=(0, 76, 252), markerSize = 40, thickness = 2)
+            cv2.imwrite('static/jpg/rec_dart.jpg',imgAf)
+            return pos
+        else:
+            print('wrong format of position entered')
 
-            features = np.delete(features, [features_to_delete], axis=0)  # delete corners to form new array
+    @staticmethod
+    def get_tip_pos(cnt, line, width):
+        #sort contour points from top to bottom
+        cnt = np.array(cnt).reshape(len(cnt),2)
+        ind = np.lexsort((cnt[:,0],cnt[:,1])) 
+        cnt = cnt[ind]
 
-        #For testing
-        for feature in features:
-            x,y = feature.ravel()
-            cv2.circle(diffFeatFiltered,(x,y),3,255,-1)
+        # get distance of each point to line with signs
+        [vx, vy, x0, y0] = line
+        lefty = int((-x0 * vy / vx) + y0)
+        righty = int(((width - x0) * vy / vx) + y0)
 
-
-        # 4th Step: Find most top feature which is close to line -> is dart tip
-        min_y = height
-        corr_x = None  # Corresponding coordinate
         p1 = np.array([0,lefty])
         p2 = np.array([width-1, righty])
-        # Find most top feature
-        for feature in features:
-            x,y = feature.ravel()
-            p3 = np.array([x,y])
-            distance = abs(np.cross(p2-p1,p3-p1)/np.linalg.norm(p2-p1))
-            if y < min_y and distance < 5: # threshold impor((width - x0) * vy / vx) + y0tant
 
-                # correct x value of point to be on the line
-                x = int((y - y0) * vx / vy + x0)
-            
-                min_y = y
-                corr_x = x
+        orth = np.array([vx * np.cos(np.pi/2) - vy * np.sin(np.pi/2), vx * np.sin(np.pi/2) + vy * np.cos(np.pi/2)])
+
+        tip_pos = None
+        for pt in cnt:
+                dist = np.cross(p2-p1,pt-p1)/np.linalg.norm(p2-p1)
+                if tip_pos is None and abs(dist) < 4:
+                    tip_pos = pt
+
+        return tip_pos
+
+    @staticmethod
+    def get_dart_cnt_and_box(diff):
         
-        x_out, y_out = bnds['left'] + corr_x, bnds['top'] + min_y
+        inc_box = 1.2 # Importan threshold
 
-        #For testing
-        cv2.circle(diffFeat,(corr_x,min_y),5,100,-1)
+        # Get binary image
+        ret, binary_img = cv2.threshold(diff, 70, 255, 0) #Important threshold
 
-        cv2.line(diffFeatFiltered,(0,lefty),(width-1,righty),(255,255,0),3)
+        # Get contours
+        kernel = np.ones((50,20),np.float32)
+        binary_img = cv2.morphologyEx(binary_img, cv2.MORPH_CLOSE, kernel)
+        contours, hierarchy = cv2.findContours(binary_img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
-        path_out = 'static/jpg/'
-        cv2.drawMarker(img_af, (int(x_out), int(y_out)), color=(0, 76, 252), markerSize = 40, thickness = 2)
-        cv2.imwrite(path_out + 'rec_dart.jpg',img_af)
-        cv2.imwrite(path_out + 'features_line_filtered.jpg',diffFeatFiltered)
-        cv2.imwrite(path_out + 'contours.jpg',diffCnts)
-        cv2.imwrite(path_out + 'features.jpg',diffFeat)
-        print(x_out, y_out)
+        # If more than 1 contour found, merge neigboring contours
+        rects = []
+        if len(contours) > 1:
+            for cnt in contours:
+                rects.append(cv2.boundingRect(cnt))
+            
+            # check if rectangles overlap (intersection with w>0 and h>0) or are close to each other
+            for a in rects:
+                for b in rects: 
+                    if a == b:
+                        continue
+                    
+                    # get intersection rectangle
+                    x = max(a[0], b[0])
+                    y = max(a[1], b[1])
+                    w = min(a[0]+a[2], b[0]+b[2]) - x
+                    h = min(a[1]+a[3], b[1]+b[3]) - y
 
-        return [x_out, y_out]
+                    max_dist = 20 # important threshold - max distance between rectangles which shall be connected
+                    if w>-max_dist and h>-max_dist:
+                        binary_img = cv2.rectangle(binary_img,(x,y),(x+w,y+h), 255, thickness=cv2.FILLED)
+
+        contours, hierarchy = cv2.findContours(binary_img, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+        cnt = max(contours, key=cv2.contourArea)
+        rect = cv2.minAreaRect(cnt)
+
+        #increas box
+        center,(rect_width,rect_height),theta = rect
+        rect_width = rect_width * inc_box
+        rect_height = rect_height * inc_box
+        rect = center,(rect_width,rect_height),theta
+
+        box = cv2.boxPoints(rect)
+        box = np.int0(box)
+
+        return cnt, box
+
+    @staticmethod
+    def get_line(diff, box_dart):
+
+        height, width = diff.shape[:2]
+
+        mask = np.zeros_like(diff)
+        cv2.fillPoly(mask,pts=[box_dart],color=255)
+
+        features = cv2.goodFeaturesToTrack(diff, 640, 0.0008, 1, mask=mask, blockSize=3, useHarrisDetector=1, k=0.06) #sensible: 0.0004, medium: 0.0008, conservative: 0.001
+
+        # Filter features by drawing line through them
+        [vx, vy, x0, y0] = cv2.fitLine(features, cv2.DIST_HUBER, 0, 0.1, 0.1) #dist_L1 cost function is p(r)=r, dist_L2 cost function is p(r)=r^2
+        line = [vx, vy, x0, y0]
+        lefty = int((-x0 * vy / vx) + y0)
+        righty = int(((width - x0) * vy / vx) + y0)
+
+        features_to_delete = []
+        i = 0
+        p1 = np.array([0,lefty])
+        p2 = np.array([width-1, righty])
+
+        return line
+
+if __name__ == '__main__':
+    dart = dartThrow('static/jpg/before.jpg', 'static/jpg/after.jpg')
+    p1, p2 = dart.get_position(format = 'line')
+    print(p1)
+    print(p2)
