@@ -1,6 +1,6 @@
 from datetime import datetime
 import configparser
-import src.dropbox_integration as dbx_int
+import src.db_handler as db
 import sys
 import numpy as np
 import cv2
@@ -9,29 +9,45 @@ from datetime import datetime
 from src.boardClass import *
 from src.dartThrowClass import *
 from src.videoCapture import *
+import sqlite3 
+import json
 
 class Camera:
         
-    def __init__(self, name, src = 0, width = 640, height = 480, rot = 0):
-        self.name = name
-        self.cap = VideoStream(src = src, width = width, height = height, rot = rot).start()
-        self.rel_pts = self.calibration()
-        self.board = Board(rel_pts = self.rel_pts)
+    def __init__(self, src = 0, closest_field = 20, width = 640, height = 480, rot = 0):
+
+        self.src = src
+        self.cap = VideoStream(src = src, width = width, height = height, rot = rot)
+        self.cap.start()
+
+        #Check if data is available in SQL
+        h = db.get_trafo(self.src)
+    
+        if h is not None:
+            self.board = Board(h = h)
+        else:
+            self.board = Board()
+            self.calibrate_board(closest_field = closest_field)
+            db.write_trafo(src, self.board.h)
+
+        
+
         self.dartThrow = None
 
-    def calibration(self):
+    def calibrate_board(self, closest_field):
 
-        rel_pts = {
-            "center": [312,298],
-            "left": [92,293],
-            "right": [536,304],
-            "top": [304,164],
-            "bottom": [317,367]
-        }
-        return rel_pts
+        time.sleep(0.5)
+        img = self.cap.read()
+
+        #img = cv2.imread('static/jpg/base_img{}.jpg'.format(self.src))
+
+        self.board.calibration(img, closest_field = closest_field)
+        h = self.board.h
+        db.write_trafo(self.src, h)
 
     def dart_motion_dect(self):
-
+        
+        time.sleep(0.5)
         print('Waiting for motion')
         
         #Parameters
@@ -53,21 +69,17 @@ class Camera:
         while not dart_detected:
 
             # Wait for motion
-            img_before, img_start_motion, ratio_start_motion, _ = self.wait_for_img_diff_within_thresh(min_ratio, np.inf, t_rep)
+            img_before, img_start_motion, _ = self.wait_for_img_diff_within_thresh(min_ratio, np.inf, t_rep)
 
             # Wait for motion to stop
-            _, img_after, ratio_max_motion, t_motion = self.wait_for_img_diff_within_thresh(0, min_ratio, t_rep, start_image = img_start_motion)
-
-            # Get maximum difference of motion
-            ratio_max = max(ratio_start_motion, ratio_max_motion)
+            _, img_after, t_motion = self.wait_for_img_diff_within_thresh(0, min_ratio, t_rep, start_image = img_start_motion)
 
             # Get difference ratio of image befor motion and image after motion
             ratio_final = Camera.get_img_diff_ratio(img_before,img_after)
             
             # Criteria for being a dart:
             # time of motion, maximum object smaller max treshold, size of final object in thresholds
-            if t_motion < t_max and ratio_max < max_ratio and \
-                ratio_final < max_ratio and ratio_final > min_ratio:
+            if t_motion < t_max and ratio_final < max_ratio and ratio_final > min_ratio: # ratio_max < max_ratio and
                 dart_detected = True
             else:
                 print('Motion took too long or object to large')
@@ -85,27 +97,35 @@ class Camera:
         t = 0
         ratio_max = 0
         if start_image is None:
-            img1 = self.cap.read()
+            
+            success = False
+            while success is False:
+                img1, success= self.cap.read()
+
             time.sleep(t_rep)
         else:
             img1 = start_image
-        
-        img2 = self.cap.read()
+
+        success = False
+        while success is False:
+                img2, success = self.cap.read()
+
         img_diff_ratio = Camera.get_img_diff_ratio(img1, img2)
 
         while img_diff_ratio < min_ratio or img_diff_ratio > max_ratio:
             
             t = t + t_rep
             time.sleep(t_rep)
-            img1 = img2
-            img2 = self.cap.read()
+            img1 = img2.copy()
+
+            success = False
+            while success == False:
+                img2, success = self.cap.read()
 
             # Get ratio of difference pixels between first and second image
             img_diff_ratio = Camera.get_img_diff_ratio(img1, img2)
 
-            ratio_max = max(ratio_max, img_diff_ratio)
-
-        return img1, img2, ratio_max, t
+        return img1, img2, t
 
     @staticmethod
     def get_img_diff_ratio(img1, img2):
