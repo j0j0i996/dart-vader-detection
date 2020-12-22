@@ -18,7 +18,7 @@ def index():
 @app.route('/wait_throw')
 def get_score():
     camera.dart_motion_dect()
-    pos = camera.dartThrow.get_position(format = 'point')
+    pos = camera.dartThrow.get_pos(format = 'point')
     score = camera.board.get_score(pos)
     return json.dumps({'score': score})
 

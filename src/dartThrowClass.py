@@ -11,7 +11,7 @@ class dartThrow:
         return 'RelCarth Pos: {} \n\nStd Carth Pos: {} \n'\
             .format(self.rel_carth_pos, self.std_carth_pos)
 
-    def get_position(self, format = 'line'): #alternative: format = 'point
+    def get_pos(self, format = 'line'): #alternative: format = 'point'
 
         imgBf = cv2.imread(self.img_before_link)
         imgAf = cv2.imread(self.img_after_link)
