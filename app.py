@@ -2,7 +2,9 @@ from flask import Flask, render_template
 import os
 import json
 import cv2
-import src.cameraClass as camCls
+import sys
+sys.path.append(".")
+import cameraClass as camCls
 
 app = Flask(__name__)
 

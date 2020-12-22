@@ -1,36 +1,36 @@
 from datetime import datetime
 import configparser
-import src.db_handler as db
 import sys
 import numpy as np
 import cv2
 import time
 from datetime import datetime
-from src.boardClass import *
-from src.dartThrowClass import *
-from src.videoCapture import *
+from boardClass import *
+from dartThrowClass import *
+from videoCapture import *
+import db_handler as db
 import sqlite3 
 import json
 
 class Camera:
         
-    def __init__(self, src = 0, closest_field = 20, width = 640, height = 480, rot = 0):
+    def __init__(self, src = 0, width = 640, height = 480, rot = 0):
 
         self.src = src
         self.cap = VideoStream(src = src, width = width, height = height, rot = rot)
         self.cap.start()
 
-        #Check if data is available in SQL
+        # get transformation from sql
         h = db.get_trafo(self.src)
     
         if h is not None:
             self.board = Board(h = h)
         else:
             self.board = Board()
-            self.calibrate_board(closest_field = closest_field)
-            db.write_trafo(src, self.board.h)
 
         self.dartThrow = None
+        self.motionDetected = False
+        self.motionRatio = 0
 
     def calibrate_board(self, closest_field):
 
@@ -44,7 +44,9 @@ class Camera:
         db.write_trafo(self.src, h)
 
     def dart_motion_dect(self):
-        
+
+        self.motionDetected = False  
+        self.motionRatio = 0
         time.sleep(0.5)
         print('Waiting for motion')
         
@@ -57,7 +59,7 @@ class Camera:
         # Get output paths
         config = configparser.ConfigParser()
         config.read('config.ini')
-        image_before_link = config['Paths']['image_before_link']
+        image_before_link = config['Paths']['image_before_link']   Change to static + src
         image_after_link = config['Paths']['image_after_link']
         del config
 
@@ -88,7 +90,8 @@ class Camera:
 
         self.dartThrow = dartThrow(image_before_link,image_after_link)
 
-        return True
+        self.motionDetected = True
+        self.motionRatio = ratio_final
 
     def wait_for_img_diff_within_thresh(self,min_ratio,max_ratio,t_rep, start_image = None):
         img_diff_ratio = -1
