@@ -7,8 +7,8 @@ import src.cameraClass as camCls
 app = Flask(__name__)
 
 #camera = camCls.Camera(src=0, rot=180, closest_field = 20)
-camera = camCls.Camera(src=2, rot=180, closest_field = 20)
-#camera = camCls.Camera(src=4, rot=180, closest_field = 3)
+#camera = camCls.Camera(src=2, rot=180, closest_field = 20)
+camera = camCls.Camera(src=4, rot=180, closest_field = 3)
 #camera.calibrate_board(3)
 
 @app.route('/')
@@ -18,7 +18,9 @@ def index():
 @app.route('/wait_throw')
 def get_score():
     camera.dart_motion_dect()
-    return json.dumps({'score': camera.dartThrow.score})
+    pos = camera.dartThrow.get_pos(format = 'point')
+    score = camera.board.get_score(pos)
+    return json.dumps({'score': score})
 
 if __name__ == '__main__':
     pass

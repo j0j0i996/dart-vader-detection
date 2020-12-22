@@ -78,12 +78,12 @@ class Board:
         return score
 
     def calibration(self, img, closest_field = 20):
-        src = self.get_src_points_optical(img, closest_field = closest_field)
+        src = self.get_src_points(img, closest_field = closest_field)
         dest = self.get_dest_points()
         h, status = cv2.findHomography(src, dest)
         self.h = h
     
-    def get_src_points_optical(self, img, closest_field):
+    def get_src_points(self, img, closest_field):
         #For now just outer circle
         ellipses = self.get_ellipses(img)
         rel_center = ellipses[0][0]

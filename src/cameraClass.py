@@ -30,8 +30,6 @@ class Camera:
             self.calibrate_board(closest_field = closest_field)
             db.write_trafo(src, self.board.h)
 
-        
-
         self.dartThrow = None
 
     def calibrate_board(self, closest_field):
@@ -88,7 +86,9 @@ class Camera:
         cv2.imwrite(image_before_link, img_before)
         cv2.imwrite(image_after_link, img_after)
 
-        self.dartThrow = dartThrow(image_before_link,image_after_link,self.board)
+        self.dartThrow = dartThrow(image_before_link,image_after_link)
+
+        return True
 
     def wait_for_img_diff_within_thresh(self,min_ratio,max_ratio,t_rep, start_image = None):
         img_diff_ratio = -1
