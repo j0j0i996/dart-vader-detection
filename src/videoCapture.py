@@ -1,6 +1,7 @@
 # import the necessary packages
 from threading import Thread
 import cv2
+import time
 
 rotations = [None, cv2.ROTATE_90_CLOCKWISE, cv2.ROTATE_180, cv2.ROTATE_90_COUNTERCLOCKWISE]
 
@@ -15,7 +16,7 @@ class VideoStream:
 
         self.stream.set(3, width)
         self.stream.set(4, height)
-        self.stream.set(cv2.CAP_PROP_EXPOSURE,-2)
+        self.stream.set(cv2.CAP_PROP_EXPOSURE,-3)
 
         (self.grabbed, self.frame) = self.stream.read()
         self.rotCode = rotations[int(rot/90)]
@@ -48,16 +49,19 @@ class VideoStream:
         
 
 if __name__ == '__main__':
-    cap = VideoStream(src = 2, rot = 180)
+    cap = VideoStream(src = 0, rot = 180)
     cap.start()
+    time.sleep(3)
     for i in range(5):
         img, success = cap.read()
+        time.sleep(0.1)
         print(success)
         cv2.imwrite('test{}.jpg'.format(i), img)
-    cap.stop()
-    cap.start()
+        
+    time.sleep(0.5)
     for i in range(6,10):
         img, success = cap.read()
+        time.sleep(0.1)
         print(success)
         cv2.imwrite('test{}.jpg'.format(i), img)
     cap.stop()

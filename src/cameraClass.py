@@ -1,14 +1,12 @@
 from datetime import datetime
-import configparser
-import sys
 import numpy as np
 import cv2
 import time
 from datetime import datetime
-from boardClass import *
-from dartThrowClass import *
-from videoCapture import *
-import db_handler as db
+import src.boardClass as boardClass
+import src.dartThrowClass as dartThrowClass
+import src.videoCapture as videoCapture
+import src.db_handler as db
 import sqlite3 
 import json
 
@@ -17,15 +15,16 @@ class Camera:
     def __init__(self, src = 0, width = 640, height = 480, rot = 0):
 
         self.src = src
-        self.cap = VideoStream(src = src, width = width, height = height, rot = rot)
+        self.cap = videoCapture.VideoStream(src = src, width = width, height = height, rot = rot)
+        self.cap.start()
 
         # get transformation from sql
         h = db.get_trafo(self.src)
     
         if h is not None:
-            self.board = Board(h = h)
+            self.board = boardClass.Board(h = h)
         else:
-            self.board = Board()
+            self.board = boardClass.Board()
 
         self.dartThrow = None
         self.motionDetected = False
@@ -47,8 +46,6 @@ class Camera:
         self.motionDetected = False  
         self.motionRatio = 0
 
-        cap.start()
-        time.sleep(0.5)
         print('Waiting for motion')
         
         #Parameters
@@ -57,12 +54,8 @@ class Camera:
         min_ratio = 0.002 #Thresholds important - make accessible / dynamic - between 0 and 1
         max_ratio = 0.035
 
-        # Get output paths
-        config = configparser.ConfigParser()
-        config.read('config.ini')
-        image_before_link = config['Paths']['image_before_link']   Change to static + src
-        image_after_link = config['Paths']['image_after_link']
-        del config
+        image_before_link = 'static/jpg/before_{}.jpg'.format(self.src)
+        image_after_link = 'static/jpg/after_{}.jpg'.format(self.src)
 
         # Initialize loop
         dart_detected = False
@@ -82,7 +75,6 @@ class Camera:
             # time of motion, maximum object smaller max treshold, size of final object in thresholds
             if t_motion < t_max and ratio_final < max_ratio and ratio_final > min_ratio: # ratio_max < max_ratio and
                 dart_detected = True
-                cap.stop()
             else:
                 print('Motion took too long or object to large')
 
@@ -90,7 +82,7 @@ class Camera:
         cv2.imwrite(image_before_link, img_before)
         cv2.imwrite(image_after_link, img_after)
 
-        self.dartThrow = dartThrow(image_before_link,image_after_link)
+        self.dartThrow = dartThrowClass.dartThrow(image_before_link,image_after_link)
 
         self.motionDetected = True
         self.motionRatio = ratio_final

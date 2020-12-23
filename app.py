@@ -3,15 +3,16 @@ import os
 import json
 import cv2
 import sys
-sys.path.append(".")
-import cameraClass as camCls
+import src.cameraClass as camCls
+import atexit
 
 app = Flask(__name__)
 
-#camera = camCls.Camera(src=0, rot=180, closest_field = 20)
-#camera = camCls.Camera(src=2, rot=180, closest_field = 20)
-camera = camCls.Camera(src=4, rot=180, closest_field = 3)
+camera = camCls.Camera(src=4, rot=180)
 #camera.calibrate_board(3)
+
+def exit_handler():
+    camera.cap.stop()
 
 @app.route('/')
 def index():
@@ -25,7 +26,7 @@ def get_score():
     return json.dumps({'score': score})
 
 if __name__ == '__main__':
-    pass
+    atexit.register(exit_handler)
     app.run(host='0.0.0.0', port='8090') #, debug=True
     #img = cv2.imread('static/jpg/base_img4.jpg')
     #print(camera.board.h)
