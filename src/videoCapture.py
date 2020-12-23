@@ -42,9 +42,10 @@ class VideoStream:
 
     def read(self):
         # return the frame most recently read
+        frame, grabbed = self.frame, self.grabbed
         if self.rotCode is not None:
-            self.frame = cv2.rotate(self.frame, self.rotCode)
-        return self.frame, self.grabbed
+            frame = cv2.rotate(frame, self.rotCode)
+        return frame, grabbed
 
     def stop(self):
         # indicate that the thread should be stopped
