@@ -1,4 +1,3 @@
-
 # import the necessary packages
 from threading import Thread
 import cv2
@@ -22,22 +21,18 @@ class VideoStream:
         self.rotCode = rotations[int(rot/90)]
 
         # initialize the variable used to indicate if the thread should
-        self.stopped = False
+        self.running = False
 
     def start(self):
         # start the thread to read frames from the video stream
+        self.running = True
         #with concurrent.futures.ThreadPoolExecutor() as executor:
             #executor.submit(self.update)
         self.t = Thread(target=self.update, args=()).start()
 
     def update(self):
         # keep looping infinitely until the thread is stopped
-        while True:
-            # if the thread indicator variable is set, stop the thread
-            if self.stopped:
-                return
-            
-            # otherwise, read the next frame from the stream
+        while self.running:
             (self.grabbed, self.frame) = self.stream.read()
 
     def read(self):
@@ -49,5 +44,21 @@ class VideoStream:
 
     def stop(self):
         # indicate that the thread should be stopped
-        self.stopped = True
+        self.running = False
         
+
+if __name__ == '__main__':
+    cap = VideoStream(src = 2, rot = 180)
+    cap.start()
+    for i in range(5):
+        img, success = cap.read()
+        print(success)
+        cv2.imwrite('test{}.jpg'.format(i), img)
+    cap.stop()
+    cap.start()
+    for i in range(6,10):
+        img, success = cap.read()
+        print(success)
+        cv2.imwrite('test{}.jpg'.format(i), img)
+    cap.stop()
+    

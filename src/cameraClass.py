@@ -46,6 +46,8 @@ class Camera:
 
         self.motionDetected = False  
         self.motionRatio = 0
+
+        cap.start()
         time.sleep(0.5)
         print('Waiting for motion')
         
@@ -80,6 +82,7 @@ class Camera:
             # time of motion, maximum object smaller max treshold, size of final object in thresholds
             if t_motion < t_max and ratio_final < max_ratio and ratio_final > min_ratio: # ratio_max < max_ratio and
                 dart_detected = True
+                cap.stop()
             else:
                 print('Motion took too long or object to large')
 
