@@ -18,7 +18,6 @@ class Camera:
 
         self.src = src
         self.cap = VideoStream(src = src, width = width, height = height, rot = rot)
-        self.cap.start()
 
         # get transformation from sql
         h = db.get_trafo(self.src)
