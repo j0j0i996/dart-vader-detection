@@ -11,8 +11,8 @@ class camManager:
 
         self.width = width
         self.height = height
-        self.src_list = self.get_srcs()
-        #self.src_list = [0,2,4]
+        #self.src_list = self.get_srcs()
+        self.src_list = [0,2,4]
         self.cam_list = self.activate_cams()
 
         print(self.src_list)
@@ -66,12 +66,13 @@ class camManager:
 
         print('min 1 cam deteted motion')
         
-        time.sleep(0.2)
+        time.sleep(0.4)
+
 
         ratio_list = []
         for cam in self.cam_list:
                 if cam.dartDetected:
-                    ratio_list.append({'cam':cam, 'ratio': cam.motionRatio})
+                    ratio_list.append({'cam':cam, 'src':cam.src, 'ratio': cam.motionRatio})
                 else:
                     cam.dartDetected = True # stops motion detection of camera
 
@@ -81,10 +82,12 @@ class camManager:
             cam = ratio_list[0]['cam']
             rel_pos = cam.dartThrow.get_pos(format = 'point')
             std_pos = cam.board.rel2std(rel_pos)
-            score = cam.board.get_score(pos)
+            score = cam.board.get_score(std_pos)
         else:
             filter_list = sorted(ratio_list, key=lambda k: k['ratio'], reverse = True)[0:2]
             cams = [x['cam'] for x in filter_list]
+
+            print(cams)
 
             line_list = []
             for cam in cams:

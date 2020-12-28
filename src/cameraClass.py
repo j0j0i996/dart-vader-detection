@@ -52,7 +52,7 @@ class Camera:
             raise Exception('Problem reading camera')
             return
 
-        cv2.imwrite('static/jpg/test.jpg', img)
+        cv2.imwrite('static/jpg/test_{}.jpg'.format(self.src), img)
 
         #img = cv2.imread('static/jpg/base_img{}.jpg'.format(self.src))
 
@@ -98,7 +98,7 @@ class Camera:
                 cv2.imwrite(image_before_link, img_before)
                 cv2.imwrite(image_after_link, img_after)
 
-                self.dartThrow = dartThrowClass.dartThrow(img_before,img_after)
+                self.dartThrow = dartThrowClass.dartThrow(img_before,img_after, self.src)
                 self.motionRatio = ratio_final
                 print('Dart detected')
                 self.dartDetected = True
@@ -157,8 +157,6 @@ class Camera:
         white_pixels = cv2.countNonZero(thresh)
         total_pixels = diff.size
         ratio = white_pixels/total_pixels
-        if ratio > 0.0001:
-            print(ratio)
 
         return ratio
 

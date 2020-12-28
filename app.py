@@ -31,13 +31,12 @@ def get_score():
 if __name__ == '__main__':
     atexit.register(exit_handler)
 
-    camManager.cam_list[2].calibrate_board(20)
+    camManager.cam_list[0].calibrate_board(20)
 
     #camManager.start_cams()
     #while True:
         #camManager.motion_detection()
 
-    
     time.sleep(1)
     camManager.stop_cams()
     print('end')

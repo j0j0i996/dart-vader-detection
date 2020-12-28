@@ -31,7 +31,7 @@ class VideoStream:
         #with concurrent.futures.ThreadPoolExecutor() as executor:
             #executor.submit(self.update)
         self.t = Thread(target=self.update, args=()).start()
-        time.sleep(1)
+        time.sleep(3)
 
     def update(self):
         # keep looping infinitely until the thread is stopped
@@ -46,7 +46,6 @@ class VideoStream:
         if self.rotCode is not None:
             frame = cv2.rotate(frame, self.rotCode)
         
-        print(success)
         return frame, success
 
     def stop(self):

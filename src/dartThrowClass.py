@@ -3,9 +3,10 @@ import numpy as np
 
 class dartThrow:
 
-    def __init__(self, img_before, img_after):
+    def __init__(self, img_before, img_after, src):
         self.img_before = img_before
         self.img_after = img_after
+        self.src = src
 
     def __repr__(self):
         return 'RelCarth Pos: {} \n\nStd Carth Pos: {} \n'\
@@ -43,7 +44,7 @@ class dartThrow:
 
             #Testing
             cv2.line(imgAf,(0,int(lefty)),(width-1,int(righty)),(255,255,0),)
-            cv2.imwrite('static/jpg/dart_line.jpg',imgAf)
+            cv2.imwrite('static/jpg/dart_line_{}.jpg'.format(self.src),imgAf)
             return p1, p2
             
         elif format == 'point':

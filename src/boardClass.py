@@ -197,7 +197,7 @@ class Board:
 
         red_mask = mask1 + mask2
         red = cv2.bitwise_and(img_white, img_white, mask=red_mask)
-        masked_img = cv2.add(red,green)   
+        masked_img = cv2.add(red,green)
 
         gray_img_dark = cv2.cvtColor(masked_img,cv2.COLOR_BGR2GRAY)
 
