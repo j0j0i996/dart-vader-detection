@@ -3,9 +3,9 @@ import numpy as np
 
 class dartThrow:
 
-    def __init__(self, img_before_link, img_after_link):
-        self.img_before_link = img_before_link
-        self.img_after_link = img_after_link
+    def __init__(self, img_before, img_after):
+        self.img_before = img_before
+        self.img_after = img_after
 
     def __repr__(self):
         return 'RelCarth Pos: {} \n\nStd Carth Pos: {} \n'\
@@ -13,8 +13,10 @@ class dartThrow:
 
     def get_pos(self, format = 'line'): #alternative: format = 'point'
 
-        imgBf = cv2.imread(self.img_before_link)
-        imgAf = cv2.imread(self.img_after_link)
+        #imgBf = cv2.imread(self.img_before_link)
+        #imgAf = cv2.imread(self.img_after_link)
+        imgBf = self.img_before
+        imgAf = self.img_after
 
         diff = cv2.absdiff(imgBf, imgAf)
         height, width = diff.shape[:2]

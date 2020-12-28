@@ -16,24 +16,43 @@ class Camera:
 
         self.src = src
         self.cap = videoCapture.VideoStream(src = src, width = width, height = height, rot = rot)
-        self.cap.start()
-
+        
         # get transformation from sql
         h = db.get_trafo(self.src)
     
         if h is not None:
-            self.board = boardClass.Board(h = h)
+            self.board = boardClass.Board(h = h, src = self.src)
         else:
-            self.board = boardClass.Board()
+            self.board = boardClass.Board(src = self.src)
 
         self.dartThrow = None
-        self.motionDetected = False
+        self.dartDetected = False
         self.motionRatio = 0
+        self.img_before = None
+        self.img_after = None
+
+    def start(self):
+        self.cap.start()
+
+    def stop(self):
+        self.cap.stop()
 
     def calibrate_board(self, closest_field):
 
-        time.sleep(0.5)
-        img = self.cap.read()
+        if self.cap.running == False:
+            self.start()
+
+        max_tries = 10
+        for _ in range(max_tries):
+            img, success = self.cap.read()
+            if success:
+                break
+
+        if success == False:
+            raise Exception('Problem reading camera')
+            return
+
+        cv2.imwrite('static/jpg/test.jpg', img)
 
         #img = cv2.imread('static/jpg/base_img{}.jpg'.format(self.src))
 
@@ -41,9 +60,11 @@ class Camera:
         h = self.board.h
         db.write_trafo(self.src, h)
 
-    def dart_motion_dect(self):
+        self.stop()
 
-        self.motionDetected = False  
+    def dart_motion_dect(self):
+        
+        self.dartDetected = False
         self.motionRatio = 0
 
         print('Waiting for motion')
@@ -57,10 +78,8 @@ class Camera:
         image_before_link = 'static/jpg/before_{}.jpg'.format(self.src)
         image_after_link = 'static/jpg/after_{}.jpg'.format(self.src)
 
-        # Initialize loop
-        dart_detected = False
-
-        while not dart_detected:
+        
+        while self.dartDetected == False:
 
             # Wait for motion
             img_before, img_start_motion, _ = self.wait_for_img_diff_within_thresh(min_ratio, np.inf, t_rep)
@@ -74,18 +93,19 @@ class Camera:
             # Criteria for being a dart:
             # time of motion, maximum object smaller max treshold, size of final object in thresholds
             if t_motion < t_max and ratio_final < max_ratio and ratio_final > min_ratio: # ratio_max < max_ratio and
-                dart_detected = True
+                
+                #Testing
+                cv2.imwrite(image_before_link, img_before)
+                cv2.imwrite(image_after_link, img_after)
+
+                self.dartThrow = dartThrowClass.dartThrow(img_before,img_after)
+                self.motionRatio = ratio_final
+                print('Dart detected')
+                self.dartDetected = True
             else:
                 print('Motion took too long or object to large')
 
-        print('Dart detected')
-        cv2.imwrite(image_before_link, img_before)
-        cv2.imwrite(image_after_link, img_after)
-
-        self.dartThrow = dartThrowClass.dartThrow(image_before_link,image_after_link)
-
-        self.motionDetected = True
-        self.motionRatio = ratio_final
+        return
 
     def wait_for_img_diff_within_thresh(self,min_ratio,max_ratio,t_rep, start_image = None):
         img_diff_ratio = -1

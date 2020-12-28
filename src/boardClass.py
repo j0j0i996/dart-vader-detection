@@ -5,20 +5,17 @@ class Board:
 
     std_center = [400, 400]
 
-    def __init__(self, h = None):
+    def __init__(self, h = None, src = 0):
         self.h = h
+        self.src = src
 
     def __repr__(self):
         return 'Relative board position: \n{} \nStandard board position: \n{} \nHomography matrix \n {} \n'\
             .format(self.rel_pts, self.std_pts, self.h)
 
-    def get_score(self, rel_carth_pos):
-            std_carth_pos = self.rel2std(rel_carth_pos)
-            print('std_carth_pos')
-            print(std_carth_pos)
-            std_polar_pos = self.carth2pol(std_carth_pos)
-            print('std_polar_pos')
-            print(std_polar_pos)
+    def get_score(self, std_pos):
+
+            std_polar_pos = self.carth2pol(std_pos)
             score = self.pol2score(std_polar_pos)
             return score
 
@@ -105,6 +102,9 @@ class Board:
         fields = [20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5]
         idx = fields.index(closest_field)
         src_points = np.roll(src_points, -idx, axis=0)
+
+        img = cv2.ellipse(img, ellipses[1], 255, 2)
+        cv2.imwrite('static/jpg/calibration_{}.jpg'.format(self.src), img)
 
         return src_points
 
