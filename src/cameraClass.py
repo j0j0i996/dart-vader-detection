@@ -26,7 +26,7 @@ class Camera:
             self.board = boardClass.Board(src = self.src)
 
         self.dartThrow = None
-        self.dartDetected = False
+        self.motionDetected = False
         self.motionRatio = 0
         self.img_before = None
         self.img_after = None
@@ -64,7 +64,7 @@ class Camera:
 
     def dart_motion_dect(self):
         
-        self.dartDetected = False
+        self.motionDetected = False
         self.motionRatio = 0
 
         print('Waiting for motion')
@@ -79,7 +79,7 @@ class Camera:
         image_after_link = 'static/jpg/after_{}.jpg'.format(self.src)
 
         
-        while self.dartDetected == False:
+        while self.motionDetected == False:
 
             # Wait for motion
             img_before, img_start_motion, _ = self.wait_for_img_diff_within_thresh(min_ratio, np.inf, t_rep)
@@ -101,11 +101,14 @@ class Camera:
                 self.dartThrow = dartThrowClass.dartThrow(img_before,img_after, self.src)
                 self.motionRatio = ratio_final
                 print('Dart detected')
-                self.dartDetected = True
+                self.motionDetected = True
+                return
             else:
+                self.motionDetected = True
+                self.motionRatio = False
+                self.dartThrow = None
                 print('Motion took too long or object to large')
-
-        return
+                return
 
     def wait_for_img_diff_within_thresh(self,min_ratio,max_ratio,t_rep, start_image = None):
         img_diff_ratio = -1

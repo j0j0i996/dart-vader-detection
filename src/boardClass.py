@@ -103,7 +103,8 @@ class Board:
         idx = fields.index(closest_field)
         src_points = np.roll(src_points, -idx, axis=0)
 
-        img = cv2.ellipse(img, ellipses[1], 255, 2)
+        for pt in src_points:
+            img = cv2.circle(img, (int(pt[0]),int(pt[1])), 2, 255, 2)
         cv2.imwrite('static/jpg/calibration_{}.jpg'.format(self.src), img)
 
         return src_points
@@ -125,6 +126,20 @@ class Board:
             dest_points[i] = np.array(cls.pol2cath(r, angle))
         return dest_points
 
+    @classmethod
+    def draw_board(cls):
+        img = np.zeros((cls.std_center[0] * 2, cls.std_center[1] * 2))
+        r_list = [16, 99, 107, 162, 170]
+        for r in r_list:
+            cv2.circle(img, (cls.std_center[0], cls.std_center[1]), r, 255, 1)
+        
+        r = 170
+        for phi in range(9,360,18):
+            x,y = cls.pol2cath(r, phi)
+            cv2.line(img, (cls.std_center[0], cls.std_center[1]), (int(x),int(y)), 255, 1)
+
+        return img
+
     def get_lines(self, img, rel_center):
 
         gray_img_dark = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -133,7 +148,7 @@ class Board:
         kernel = np.ones((2,2),np.float32)
         dilation = cv2.dilate(canny,kernel,iterations = 1)
 
-        lines = cv2.HoughLinesP(dilation,  1, 1*np.pi/180, 45, minLineLength=80, maxLineGap=200)
+        lines = cv2.HoughLinesP(dilation,  1, 1*np.pi/180, 45, minLineLength=70, maxLineGap=200)
         mask_black = np.zeros_like(img)
 
         # Line Cleaning
@@ -180,19 +195,19 @@ class Board:
         img_white.fill(255)
 
         #Thresholds
-        low_green = np.array([36, 74, 83])
+        low_green = np.array([36, 74, 45])
         high_green = np.array([94, 255, 255])
         green_mask = cv2.inRange(hsv_frame, low_green, high_green)
         green = cv2.bitwise_and(img_white, img_white, mask=green_mask)
         
         # Range for lower red
         low_red = np.array([0, 55, 212])
-        high_red = np.array([25,117, 255]) 
+        high_red = np.array([25,117, 255])  
         mask1 = cv2.inRange(hsv_frame, low_red, high_red)
 
         # Range for upper red
-        low_red_2 = np.array([139, 25, 216])
-        high_red_2 = np.array([255, 123, 255])
+        low_red_2 = np.array([139, 25, 111])
+        high_red_2 = np.array([255, 180, 255])
         mask2 = cv2.inRange(hsv_frame, low_red_2, high_red_2)
 
         red_mask = mask1 + mask2
@@ -226,3 +241,9 @@ class Board:
         ellipses = [ellipses[index[0]], ellipses[index[2]]]
         
         return ellipses
+
+
+if __name__ == '__main__':
+    img = Board.draw_board()
+    cv2.imwrite('static/jpg/draw_board.jpg', img)
+

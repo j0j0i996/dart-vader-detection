@@ -23,19 +23,22 @@ def index():
 
 @app.route('/wait_throw')
 def get_score():
-    camera.dart_motion_dect()
-    pos = camera.dartThrow.get_pos(format = 'point')
-    score = camera.board.get_score(pos)
-    return json.dumps({'score': score})
+    #camera.dart_motion_dect()
+    #pos = camera.dartThrow.get_pos(format = 'point')
+    #score = camera.board.get_score(pos)
+    score, event = camManager.motion_detection()
+    return json.dumps({'score': score, 'event': event})
 
 if __name__ == '__main__':
     atexit.register(exit_handler)
 
-    camManager.cam_list[0].calibrate_board(20)
+    #camManager.cam_list[0].calibrate_board(12)
+    #camManager.cam_list[1].calibrate_board(3)
+    #camManager.cam_list[2].calibrate_board(4)
 
-    #camManager.start_cams()
-    #while True:
-        #camManager.motion_detection()
+    camManager.start_cams()
+    while True:
+        camManager.motion_detection()
 
     time.sleep(1)
     camManager.stop_cams()
