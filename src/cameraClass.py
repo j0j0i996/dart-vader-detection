@@ -62,6 +62,12 @@ class Camera:
 
         self.stop()
 
+    def manual_calibration(self):
+        self.board.manual_calibration()
+        h = self.board.h
+        print(h)
+        db.write_trafo(self.src, h)
+
     def dart_motion_dect(self):
         
         self.motionDetected = False

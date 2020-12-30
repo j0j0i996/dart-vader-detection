@@ -71,5 +71,6 @@ if __name__ == '__main__':
 
     #h = np.array([2,2])
     #write_trafo(10, h)
-    h = get_trafo(4)
+    
+    h = get_trafo(0)
     print(h)

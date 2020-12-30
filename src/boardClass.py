@@ -1,5 +1,6 @@
 import numpy as np
 import cv2
+import json
 
 class Board:
 
@@ -80,6 +81,30 @@ class Board:
         h, status = cv2.findHomography(src, dest)
         self.h = h
     
+    def manual_calibration(self):
+
+        with open('static/db/src_pts.json') as f:
+            data = json.load(f)
+        
+        data = data['src_' + str(self.src)]
+        
+        src_pts = []
+        for pt in data.values():
+            src_pts.append(np.array([pt['x'],pt['y']]))
+        
+        # get destination points
+        dest_pts = [np.array(self.std_center)]
+        r = 170
+        angle_list = [81, -9, 261, 171]
+        for phi in angle_list:
+            pt = self.pol2cath(r, phi)
+            dest_pts.append(np.array(self.pol2cath(r, phi)))
+            
+        h, status = cv2.findHomography(np.array(src_pts), np.array(dest_pts))
+        self.h = h
+
+        
+
     def get_src_points(self, img, closest_field):
         #For now just outer circle
         ellipses = self.get_ellipses(img)
@@ -181,7 +206,7 @@ class Board:
 
         if len(line_list) == 10:
             #Sort after angle
-            sorted_lines = [x for _,x in sorted(zip(angles,line_list))]
+            sorted_lines = [x for _,x in sorted(zip(angles,line_list), reverse = True)] # sort clockwise
             return sorted_lines
         else:
             return None
@@ -241,6 +266,7 @@ class Board:
         ellipses = [ellipses[index[0]], ellipses[index[2]]]
         
         return ellipses
+
 
 
 if __name__ == '__main__':

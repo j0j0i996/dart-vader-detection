@@ -11,8 +11,8 @@ class camManager:
 
         self.width = width
         self.height = height
-        #self.src_list = self.get_srcs()
-        self.src_list = [4]
+        self.src_list = self.get_srcs()
+        #self.src_list = [0]
         self.cam_list = self.activate_cams()
 
         print(self.src_list)
@@ -89,7 +89,7 @@ class camManager:
             std_pos = cam.board.rel2std(rel_pos)
 
             #testing
-            img = cams[0].board.draw_board()
+            img = cam.board.draw_board()
             cv2.circle(img, (int(std_pos[0]), int(std_pos[1])), 3, (255,0,0), 2)
             cv2.imwrite('static/jpg/line_detection.jpg', img)
 
@@ -103,10 +103,14 @@ class camManager:
             line_list = []
             for cam in cams:
                 p1, p2 = cam.dartThrow.get_pos(format = 'line')
+                print(p1)
+                print(p2)
                 p1 = cam.board.rel2std(p1)
                 p2 = cam.board.rel2std(p2)
                 line_list.append([p1,p2])
 
+                
+            print(line_list)
             std_pos = self.line_intersection(line_list[0],line_list[1])
 
             #testing

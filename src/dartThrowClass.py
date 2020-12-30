@@ -37,13 +37,13 @@ class dartThrow:
 
         if format == 'line':
             [vx, vy, x0, y0] = line
-            lefty = float((-x0 * vy / vx) + y0)
-            righty = float((width - x0) * vy / vx + y0)
-            p1 = np.array([0,lefty])
-            p2 = np.array([width-1, righty])
+            top = float((-y0 * vx / vy) + x0)
+            bottom = float((height - y0) * vx / vy + x0)
+            p1 = np.array([top,0])
+            p2 = np.array([bottom, height - 1])
 
             #Testing
-            cv2.line(imgAf,(0,int(lefty)),(width-1,int(righty)),(255,255,0),)
+            cv2.line(imgAf,(int(top),0),(int(bottom),height - 1),(255,255,0),)
             cv2.imwrite('static/jpg/dart_line_{}.jpg'.format(self.src),imgAf)
             return p1, p2
             
@@ -52,7 +52,7 @@ class dartThrow:
 
             #Testing
             cv2.drawMarker(imgAf, (int(pos[0]), int(pos[1])), color=(0, 76, 252), markerSize = 40, thickness = 2)
-            cv2.imwrite('static/jpg/rec_dart.jpg',imgAf)
+            cv2.imwrite('static/jpg/dart_pt_{}.jpg'.format(self.src),imgAf)
             return pos
         else:
             print('wrong format of position entered')
