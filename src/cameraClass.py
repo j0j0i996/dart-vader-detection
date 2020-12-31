@@ -1,51 +1,86 @@
 from datetime import datetime
-import configparser
-import src.db_handler as db
-import sys
 import numpy as np
 import cv2
 import time
 from datetime import datetime
-from src.boardClass import *
-from src.dartThrowClass import *
-from src.videoCapture import *
+import src.boardClass as boardClass
+import src.dartThrowClass as dartThrowClass
+import src.videoCapture as videoCapture
+import src.db_handler as db
+import src.dropbox_integration as dbx
 import sqlite3 
 import json
 
+#testing
+img_count = 0
+
 class Camera:
         
-    def __init__(self, src = 0, closest_field = 20, width = 640, height = 480, rot = 0):
+    def __init__(self, src = 0, width = 640, height = 480, rot = 0):
 
         self.src = src
-        self.cap = VideoStream(src = src, width = width, height = height, rot = rot)
-        self.cap.start()
-
-        #Check if data is available in SQL
+        self.cap = videoCapture.VideoStream(src = src, width = width, height = height, rot = rot)
+        self.img_count = 0
+        
+        # get transformation from sql
         h = db.get_trafo(self.src)
     
         if h is not None:
-            self.board = Board(h = h)
+            self.board = boardClass.Board(h = h, src = self.src)
         else:
-            self.board = Board()
-            self.calibrate_board(closest_field = closest_field)
-            db.write_trafo(src, self.board.h)
+            self.board = boardClass.Board(src = self.src)
 
         self.dartThrow = None
+        self.motionDetected = False
+        self.motionRatio = 0
+        self.img_before = None
+        self.img_after = None
+
+    def start(self):
+        self.cap.start()
+
+    def stop(self):
+        self.cap.stop()
+
+    def take_pic(self):
+        if self.cap.running == False:
+            self.start()
+
+        max_tries = 10
+        for _ in range(max_tries):
+            img, success = self.cap.read()
+            if success:
+                break
+
+        if success == False:
+            raise Exception('Problem reading camera')
+            return
+
+        cv2.imwrite('static/jpg/last_{}.jpg'.format(self.src), img)
+
+        return img
 
     def calibrate_board(self, closest_field):
 
-        time.sleep(0.5)
-        img = self.cap.read()
-
-        #img = cv2.imread('static/jpg/base_img{}.jpg'.format(self.src))
+        img = self.take_pic()
 
         self.board.calibration(img, closest_field = closest_field)
         h = self.board.h
         db.write_trafo(self.src, h)
 
+        self.stop()
+
+    def manual_calibration(self):
+        self.board.manual_calibration()
+        h = self.board.h
+        print(h)
+        db.write_trafo(self.src, h)
+
     def dart_motion_dect(self):
         
-        time.sleep(0.5)
+        self.motionDetected = False
+        self.motionRatio = 0
+
         print('Waiting for motion')
         
         #Parameters
@@ -54,17 +89,11 @@ class Camera:
         min_ratio = 0.002 #Thresholds important - make accessible / dynamic - between 0 and 1
         max_ratio = 0.035
 
-        # Get output paths
-        config = configparser.ConfigParser()
-        config.read('config.ini')
-        image_before_link = config['Paths']['image_before_link']
-        image_after_link = config['Paths']['image_after_link']
-        del config
+        image_before_link = 'static/jpg/before_{}.jpg'.format(self.src)
+        image_after_link = 'static/jpg/after_{}.jpg'.format(self.src)
 
-        # Initialize loop
-        dart_detected = False
-
-        while not dart_detected:
+        
+        while self.motionDetected == False:
 
             # Wait for motion
             img_before, img_start_motion, _ = self.wait_for_img_diff_within_thresh(min_ratio, np.inf, t_rep)
@@ -78,17 +107,24 @@ class Camera:
             # Criteria for being a dart:
             # time of motion, maximum object smaller max treshold, size of final object in thresholds
             if t_motion < t_max and ratio_final < max_ratio and ratio_final > min_ratio: # ratio_max < max_ratio and
-                dart_detected = True
+                
+                #Testing
+                cv2.imwrite(image_before_link, img_before)
+                cv2.imwrite(image_after_link, img_after)
+                #global img_count
+                #dbx.img_upload(image_before_link,'/Images/Session_2020_30_12/before_{}_{}.jpg'.format(self.src, img_count))
+                #dbx.img_upload(image_after_link,'/Images/Session_2020_30_12/after_{}_{}.jpg'.format(self.src, img_count))
+                #img_count = img_count + 1
+
+                self.dartThrow = dartThrowClass.dartThrow(img_before,img_after, self.src)
+                self.motionRatio = ratio_final
+                self.motionDetected = True
+                return
             else:
-                print('Motion took too long or object to large')
-
-        print('Dart detected')
-        cv2.imwrite(image_before_link, img_before)
-        cv2.imwrite(image_after_link, img_after)
-
-        self.dartThrow = dartThrow(image_before_link,image_after_link)
-
-        return True
+                self.motionDetected = True
+                self.motionRatio = False
+                self.dartThrow = None
+                return
 
     def wait_for_img_diff_within_thresh(self,min_ratio,max_ratio,t_rep, start_image = None):
         img_diff_ratio = -1
@@ -140,8 +176,6 @@ class Camera:
         white_pixels = cv2.countNonZero(thresh)
         total_pixels = diff.size
         ratio = white_pixels/total_pixels
-        if ratio > 0.0001:
-            print(ratio)
 
         return ratio
 

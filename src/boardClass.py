@@ -1,24 +1,22 @@
 import numpy as np
 import cv2
+import json
 
 class Board:
 
     std_center = [400, 400]
 
-    def __init__(self, h = None):
+    def __init__(self, h = None, src = 0):
         self.h = h
+        self.src = src
 
     def __repr__(self):
         return 'Relative board position: \n{} \nStandard board position: \n{} \nHomography matrix \n {} \n'\
             .format(self.rel_pts, self.std_pts, self.h)
 
-    def get_score(self, rel_carth_pos):
-            std_carth_pos = self.rel2std(rel_carth_pos)
-            print('std_carth_pos')
-            print(std_carth_pos)
-            std_polar_pos = self.carth2pol(std_carth_pos)
-            print('std_polar_pos')
-            print(std_polar_pos)
+    def get_score(self, std_pos):
+
+            std_polar_pos = self.carth2pol(std_pos)
             score = self.pol2score(std_polar_pos)
             return score
 
@@ -83,6 +81,30 @@ class Board:
         h, status = cv2.findHomography(src, dest)
         self.h = h
     
+    def manual_calibration(self):
+
+        with open('static/db/src_pts.json') as f:
+            data = json.load(f)
+        
+        data = data['src_' + str(self.src)]
+        
+        src_pts = []
+        for pt in data.values():
+            src_pts.append(np.array([pt['x'],pt['y']]))
+        
+        # get destination points
+        dest_pts = [np.array(self.std_center)]
+        r = 170
+        angle_list = [81, -9, 261, 171]
+        for phi in angle_list:
+            pt = self.pol2cath(r, phi)
+            dest_pts.append(np.array(self.pol2cath(r, phi)))
+            
+        h, status = cv2.findHomography(np.array(src_pts), np.array(dest_pts))
+        self.h = h
+
+        
+
     def get_src_points(self, img, closest_field):
         #For now just outer circle
         ellipses = self.get_ellipses(img)
@@ -106,6 +128,10 @@ class Board:
         idx = fields.index(closest_field)
         src_points = np.roll(src_points, -idx, axis=0)
 
+        for pt in src_points:
+            img = cv2.circle(img, (int(pt[0]),int(pt[1])), 2, 255, 2)
+        cv2.imwrite('static/jpg/calibration_{}.jpg'.format(self.src), img)
+
         return src_points
 
     @classmethod
@@ -125,6 +151,20 @@ class Board:
             dest_points[i] = np.array(cls.pol2cath(r, angle))
         return dest_points
 
+    @classmethod
+    def draw_board(cls):
+        img = np.zeros((cls.std_center[0] * 2, cls.std_center[1] * 2))
+        r_list = [16, 99, 107, 162, 170]
+        for r in r_list:
+            cv2.circle(img, (cls.std_center[0], cls.std_center[1]), r, 255, 1)
+        
+        r = 170
+        for phi in range(9,360,18):
+            x,y = cls.pol2cath(r, phi)
+            cv2.line(img, (cls.std_center[0], cls.std_center[1]), (int(x),int(y)), 255, 1)
+
+        return img
+
     def get_lines(self, img, rel_center):
 
         gray_img_dark = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -133,7 +173,7 @@ class Board:
         kernel = np.ones((2,2),np.float32)
         dilation = cv2.dilate(canny,kernel,iterations = 1)
 
-        lines = cv2.HoughLinesP(dilation,  1, 1*np.pi/180, 45, minLineLength=80, maxLineGap=200)
+        lines = cv2.HoughLinesP(dilation,  1, 1*np.pi/180, 45, minLineLength=70, maxLineGap=200)
         mask_black = np.zeros_like(img)
 
         # Line Cleaning
@@ -166,7 +206,7 @@ class Board:
 
         if len(line_list) == 10:
             #Sort after angle
-            sorted_lines = [x for _,x in sorted(zip(angles,line_list))]
+            sorted_lines = [x for _,x in sorted(zip(angles,line_list), reverse = True)] # sort clockwise
             return sorted_lines
         else:
             return None
@@ -180,24 +220,24 @@ class Board:
         img_white.fill(255)
 
         #Thresholds
-        low_green = np.array([36, 74, 83])
+        low_green = np.array([36, 74, 45])
         high_green = np.array([94, 255, 255])
         green_mask = cv2.inRange(hsv_frame, low_green, high_green)
         green = cv2.bitwise_and(img_white, img_white, mask=green_mask)
         
         # Range for lower red
         low_red = np.array([0, 55, 212])
-        high_red = np.array([25,117, 255]) 
+        high_red = np.array([25,117, 255])  
         mask1 = cv2.inRange(hsv_frame, low_red, high_red)
 
         # Range for upper red
-        low_red_2 = np.array([139, 25, 216])
-        high_red_2 = np.array([255, 123, 255])
+        low_red_2 = np.array([139, 25, 111])
+        high_red_2 = np.array([255, 180, 255])
         mask2 = cv2.inRange(hsv_frame, low_red_2, high_red_2)
 
         red_mask = mask1 + mask2
         red = cv2.bitwise_and(img_white, img_white, mask=red_mask)
-        masked_img = cv2.add(red,green)   
+        masked_img = cv2.add(red,green)
 
         gray_img_dark = cv2.cvtColor(masked_img,cv2.COLOR_BGR2GRAY)
 
@@ -226,3 +266,10 @@ class Board:
         ellipses = [ellipses[index[0]], ellipses[index[2]]]
         
         return ellipses
+
+
+
+if __name__ == '__main__':
+    img = Board.draw_board()
+    cv2.imwrite('static/jpg/draw_board.jpg', img)
+
