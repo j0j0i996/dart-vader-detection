@@ -63,7 +63,7 @@ class camManager:
                 if cam.motionDetected:
                     motion = True
         
-        time.sleep(0.2)
+        time.sleep(1)
 
         ratio_list = []
         end_of_turn = False

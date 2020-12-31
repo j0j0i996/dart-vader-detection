@@ -24,7 +24,8 @@ def index():
 @app.route('/wait_throw')
 def get_score():
     score, event, std_pos = camManager.detection()
-    return json.dumps({'score': score, 'event': event, 'pos_x': int(std_pos[0]), 'pos_y': int(std_pos[1])})
+    return json.dumps({'score': score, 'event': event})
+    #return json.dumps({'score': score, 'event': event, 'pos_x': int(std_pos[0]), 'pos_y': int(std_pos[1])})
 
 if __name__ == '__main__':
     atexit.register(exit_handler)
@@ -42,7 +43,7 @@ if __name__ == '__main__':
     #camManager.start_cams()
     #while True:
         #camManager.motion_detection()
-
+        
     #time.sleep(1)
     #camManager.stop_cams()
     #print('end')

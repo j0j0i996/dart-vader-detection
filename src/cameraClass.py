@@ -12,7 +12,7 @@ import sqlite3
 import json
 
 #testing
-img_count = 33
+img_count = 55
 
 class Camera:
         
