@@ -33,7 +33,7 @@ if __name__ == '__main__':
     atexit.register(exit_handler)
 
     #for cam in camManager.cam_list:
-        #cam.manual_calibration()
+    #   cam.manual_calibration()
 
     #camManager.cam_list[0].calibrate_board(12)
     #camManager.cam_list[1].calibrate_board(3)

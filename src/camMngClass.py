@@ -62,9 +62,6 @@ class camManager:
             for cam in self.cam_list:
                 if cam.motionDetected:
                     motion = True
-
-
-        print('min 1 cam deteted motion')
         
         time.sleep(0.2)
 
@@ -83,6 +80,8 @@ class camManager:
         if end_of_turn:
             score = False
             event = 'End of turn'
+            std_pos = None
+            print('End of turn')
         elif len(ratio_list) == 1:
             cam = ratio_list[0]['cam']
             rel_pos = cam.dartThrow.get_pos(format = 'point')
@@ -126,7 +125,10 @@ class camManager:
         for t in t_list:
             t.join()
 
-        return score, event
+        #testing
+        #camCls.Camera.img_count = camCls.Camera.img_count + 1
+        
+        return score, event, std_pos
 
     @staticmethod
     def line_intersection(line1, line2):

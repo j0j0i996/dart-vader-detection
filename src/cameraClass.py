@@ -7,8 +7,12 @@ import src.boardClass as boardClass
 import src.dartThrowClass as dartThrowClass
 import src.videoCapture as videoCapture
 import src.db_handler as db
+import src.dropbox_integration as dbx
 import sqlite3 
 import json
+
+#testing
+img_count = 0
 
 class Camera:
         
@@ -16,6 +20,7 @@ class Camera:
 
         self.src = src
         self.cap = videoCapture.VideoStream(src = src, width = width, height = height, rot = rot)
+        self.img_count = 0
         
         # get transformation from sql
         h = db.get_trafo(self.src)
@@ -37,8 +42,7 @@ class Camera:
     def stop(self):
         self.cap.stop()
 
-    def calibrate_board(self, closest_field):
-
+    def take_pic(self):
         if self.cap.running == False:
             self.start()
 
@@ -52,9 +56,13 @@ class Camera:
             raise Exception('Problem reading camera')
             return
 
-        cv2.imwrite('static/jpg/test_{}.jpg'.format(self.src), img)
+        cv2.imwrite('static/jpg/last_{}.jpg'.format(self.src), img)
 
-        #img = cv2.imread('static/jpg/base_img{}.jpg'.format(self.src))
+        return img
+
+    def calibrate_board(self, closest_field):
+
+        img = self.take_pic()
 
         self.board.calibration(img, closest_field = closest_field)
         h = self.board.h
@@ -103,17 +111,19 @@ class Camera:
                 #Testing
                 cv2.imwrite(image_before_link, img_before)
                 cv2.imwrite(image_after_link, img_after)
+                #global img_count
+                #dbx.img_upload(image_before_link,'/Images/Session_2020_30_12/before_{}_{}.jpg'.format(self.src, img_count))
+                #dbx.img_upload(image_after_link,'/Images/Session_2020_30_12/after_{}_{}.jpg'.format(self.src, img_count))
+                #img_count = img_count + 1
 
                 self.dartThrow = dartThrowClass.dartThrow(img_before,img_after, self.src)
                 self.motionRatio = ratio_final
-                print('Dart detected')
                 self.motionDetected = True
                 return
             else:
                 self.motionDetected = True
                 self.motionRatio = False
                 self.dartThrow = None
-                print('Motion took too long or object to large')
                 return
 
     def wait_for_img_diff_within_thresh(self,min_ratio,max_ratio,t_rep, start_image = None):

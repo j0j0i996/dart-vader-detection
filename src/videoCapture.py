@@ -37,7 +37,6 @@ class VideoStream:
         # keep looping infinitely until the thread is stopped
         while self.running:
             (self.success, self.frame) = self.stream.read()
-            time.sleep(0.02)
 
     def read(self):
         # return the frame most recently read
