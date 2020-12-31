@@ -12,7 +12,7 @@ import sqlite3
 import json
 
 #testing
-img_count = 0
+img_count = 33
 
 class Camera:
         
@@ -111,10 +111,11 @@ class Camera:
                 #Testing
                 cv2.imwrite(image_before_link, img_before)
                 cv2.imwrite(image_after_link, img_after)
-                #global img_count
-                #dbx.img_upload(image_before_link,'/Images/Session_2020_30_12/before_{}_{}.jpg'.format(self.src, img_count))
-                #dbx.img_upload(image_after_link,'/Images/Session_2020_30_12/after_{}_{}.jpg'.format(self.src, img_count))
-                #img_count = img_count + 1
+                global img_count
+                print(img_count)
+                dbx.img_upload(image_before_link,'/Images/Session_2020_30_12/before_{}_{}.jpg'.format(self.src, img_count))
+                dbx.img_upload(image_after_link,'/Images/Session_2020_30_12/after_{}_{}.jpg'.format(self.src, img_count))
+                img_count = img_count + 1
 
                 self.dartThrow = dartThrowClass.dartThrow(img_before,img_after, self.src)
                 self.motionRatio = ratio_final

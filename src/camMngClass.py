@@ -48,7 +48,7 @@ class camManager:
         for cam in self.cam_list:
             cam.stop()
 
-    def motion_detection(self):
+    def detection(self):
         
         # start motion detection
         t_list = []
