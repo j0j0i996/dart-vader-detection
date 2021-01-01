@@ -35,11 +35,7 @@ class Board:
     def carth2pol(self, std_cath_pos):
 
         x = std_cath_pos[0] - self.std_center[0]
-        print('x')
-        print(x)
         y = self.std_center[1] - std_cath_pos[1]
-        print('y')
-        print(y)
         r = np.sqrt(x**2 + y**2)
         phi = np.arctan2(y, x)/(2*np.pi)*360 - 90 + 360/20/2  # 0 degree is intersect between 20 and 1
 
@@ -95,7 +91,7 @@ class Board:
         # get destination points
         dest_pts = [np.array(self.std_center)]
         r = 170
-        angle_list = [81, -9, 261, 171]
+        angle_list = [99,81, -9, 279, 261, 171]
         for phi in angle_list:
             pt = self.pol2cath(r, phi)
             dest_pts.append(np.array(self.pol2cath(r, phi)))

@@ -31,10 +31,10 @@ class VideoStream:
         #with concurrent.futures.ThreadPoolExecutor() as executor:
             #executor.submit(self.update)
         self.t = Thread(target=self.update, args=()).start()
-        time.sleep(3)
 
     def update(self):
         # keep looping infinitely until the thread is stopped
+        time.sleep(3)
         while self.running:
             (self.success, self.frame) = self.stream.read()
 
