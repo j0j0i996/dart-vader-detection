@@ -86,16 +86,16 @@ class dartThrow:
     def get_dart_cnt(diff):
 
         # Get binary image
-        ret, binary_img = cv2.threshold(diff, 70, 255, 0) #Important threshold
+        ret, binary_img = cv2.threshold(diff, 60, 255, 0) #Important threshold
 
         # Get contours
-        kernel = np.ones((20,20),np.float32)
+        kernel = np.ones((9,2),np.float32)
         binary_img = cv2.morphologyEx(binary_img, cv2.MORPH_CLOSE, kernel)
         contours, hierarchy = cv2.findContours(binary_img, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
 
         cnt_pts = None
         for cnt in contours:
-            if cv2.contourArea(cnt) > 200:
+            if cv2.contourArea(cnt) > 50:
                 if cnt_pts is None:
                     cnt_pts = cnt
                 else:
@@ -108,11 +108,9 @@ class dartThrow:
 
         height, width = diff.shape[:2]
 
-        mask = np.zeros_like(diff)
-
         # Filter features by drawing line through them
         while True:
-            [vx, vy, x0, y0] = cv2.fitLine(cnt_pts, cv2.DIST_HUBER, 0, 0.1, 0.1) #dist_L1 cost function is p(r)=r, dist_L2 cost function is p(r)=r^2
+            [vx, vy, x0, y0] = cv2.fitLine(cnt_pts, cv2.DIST_L2, 0, 0.1, 0.1) #dist_L1 cost function is p(r)=r, dist_L2 cost function is p(r)=r^2
             line = [vx, vy, x0, y0]
             lefty = int((-x0 * vy / vx) + y0)
             righty = int(((width - x0) * vy / vx) + y0)
