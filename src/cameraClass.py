@@ -86,8 +86,8 @@ class Camera:
         #Parameters
         t_rep = 0.16 # Take a picure every t_repeat seconds
         t_max = 0.48 # Maximum time the motion should take time - hereby we can distinguish between dart throw and human
-        min_ratio = 0.002 #Thresholds important - make accessible / dynamic - between 0 and 1
-        max_ratio = 0.035
+        min_ratio = 0.0015 #Thresholds important - make accessible / dynamic - between 0 and 1
+        max_ratio = 0.03
 
         image_before_link = 'static/jpg/before_{}.jpg'.format(self.src)
         image_after_link = 'static/jpg/after_{}.jpg'.format(self.src)
