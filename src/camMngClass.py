@@ -43,6 +43,7 @@ class camManager:
     def start_cams(self):
         for cam in self.cam_list:
             cam.start()
+        time.sleep(5)
 
     def stop_cams(self):
         for cam in self.cam_list:
@@ -60,7 +61,7 @@ class camManager:
         motion = False
         while motion == False:
             for cam in self.cam_list:
-                if cam.motionDetected:
+                if cam.stopMotionThread:
                     motion = True
         
         time.sleep(0.2)
@@ -68,12 +69,12 @@ class camManager:
         ratio_list = []
         end_of_turn = False
         for cam in self.cam_list:
-                if cam.motionDetected:
+                if cam.stopMotionThread: # get information of cameras which detected motion
                     ratio_list.append({'cam':cam, 'src':cam.src, 'ratio': cam.motionRatio})
                     if cam.motionRatio == False:
                         end_of_turn = True
                 else:
-                    cam.motionDetected = True # stops motion detection of camera
+                    cam.stopMotionThread = True # stops motion detection of other cameras
 
         print(ratio_list)
 
@@ -82,51 +83,50 @@ class camManager:
             event = 'End of turn'
             std_pos = None
             print('End of turn')
-        elif len(ratio_list) == 1:
-            cam = ratio_list[0]['cam']
-            rel_pos = cam.dartThrow.get_pos(format = 'point')
-            std_pos = cam.board.rel2std(rel_pos)
-
-            #testing
-            img = cam.board.draw_board()
-            cv2.circle(img, (int(std_pos[0]), int(std_pos[1])), 3, (255,0,0), 2)
-            cv2.imwrite('static/jpg/line_detection.jpg', img)
-
-            score = cam.board.get_score(std_pos)
-            event = 'Dart'
         else:
-            filter_list = sorted(ratio_list, key=lambda k: k['ratio'], reverse = True)[0:2]
-            print(filter_list)
-            cams = [x['cam'] for x in filter_list]
+            if len(ratio_list) == 1:
+                print('point')
+                cam = ratio_list[0]['cam']
+                rel_pos = cam.dartThrow.get_pos(format = 'point')
+                std_pos = cam.board.rel2std(rel_pos)
 
-            line_list = []
-            for cam in cams:
-                p1, p2 = cam.dartThrow.get_pos(format = 'line')
-                print(p1)
-                print(p2)
-                p1 = cam.board.rel2std(p1)
-                p2 = cam.board.rel2std(p2)
-                line_list.append([p1,p2])
+                #testing
+                img = cam.board.draw_board()
+                cv2.circle(img, (int(std_pos[0]), int(std_pos[1])), 3, (255,0,0), 2)
+                cv2.imwrite('static/jpg/line_detection.jpg', img)
 
-                
-            print(line_list)
-            std_pos = self.line_intersection(line_list[0],line_list[1])
+                score = cam.board.get_score(std_pos)
+                event = 'Dart'
+            else:
+                print('line')
+                filter_list = sorted(ratio_list, key=lambda k: k['ratio'], reverse = True)[0:2]
+                cams = [x['cam'] for x in filter_list]
 
-            #testing
-            img = cams[0].board.draw_board()
-            img = cv2.line(img,(int(line_list[0][0][0]),int(line_list[0][0][1])), (int(line_list[0][1][0]),int(line_list[0][1][1])), 255, 2)
-            cv2.line(img,(int(line_list[1][0][0]),int(line_list[1][0][1])), (int(line_list[1][1][0]),int(line_list[1][1][1])), 255, 2)
-            cv2.circle(img, (int(std_pos[0]), int(std_pos[1])), 3, (255,0,0), 2)
-            cv2.imwrite('static/jpg/line_detection.jpg', img)
+                line_list = []
+                for cam in cams:
+                    p1, p2 = cam.dartThrow.get_pos(format = 'line')
+                    p1 = cam.board.rel2std(p1)
+                    p2 = cam.board.rel2std(p2)
+                    line_list.append([p1,p2])
 
-            score = cams[0].board.get_score(std_pos)
-            event = 'Dart'
+                std_pos = self.line_intersection(line_list[0],line_list[1])
 
-        for t in t_list:
-            t.join()
+                #testing
+                img = cams[0].board.draw_board()
+                img = cv2.line(img,(int(line_list[0][0][0]),int(line_list[0][0][1])), (int(line_list[0][1][0]),int(line_list[0][1][1])), 255, 2)
+                cv2.line(img,(int(line_list[1][0][0]),int(line_list[1][0][1])), (int(line_list[1][1][0]),int(line_list[1][1][1])), 255, 2)
+                cv2.circle(img, (int(std_pos[0]), int(std_pos[1])), 3, (255,0,0), 2)
+                cv2.imwrite('static/jpg/line_detection.jpg', img)
 
-        #testing
-        #camCls.Camera.img_count = camCls.Camera.img_count + 1
+                score = cams[0].board.get_score(std_pos)
+                event = 'Dart'
+
+        # Make sure all threads are closed
+        for cam in self.cam_list:
+            cam.stopMotionThread = True
+
+        #for t in t_list:
+         #   t.join()
         
         return score, event, std_pos
 

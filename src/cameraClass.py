@@ -31,7 +31,7 @@ class Camera:
             self.board = boardClass.Board(src = self.src)
 
         self.dartThrow = None
-        self.motionDetected = False
+        self.stopMotionThread = False
         self.motionRatio = 0
         self.img_before = None
         self.img_after = None
@@ -78,7 +78,7 @@ class Camera:
 
     def dart_motion_dect(self):
         
-        self.motionDetected = False
+        self.stopMotionThread = False
         self.motionRatio = 0
 
         print('Waiting for motion')
@@ -86,14 +86,15 @@ class Camera:
         #Parameters
         t_rep = 0.16 # Take a picure every t_repeat seconds
         t_max = 0.48 # Maximum time the motion should take time - hereby we can distinguish between dart throw and human
-        min_ratio = 0.0015 #Thresholds important - make accessible / dynamic - between 0 and 1
+        min_ratio = 0.002 #Thresholds important - make accessible / dynamic - between 0 and 1
         max_ratio = 0.03
 
+        #Testing
         image_before_link = 'static/jpg/before_{}.jpg'.format(self.src)
         image_after_link = 'static/jpg/after_{}.jpg'.format(self.src)
 
         
-        while self.motionDetected == False:
+        while self.stopMotionThread == False:
 
             # Wait for motion
             img_before, img_start_motion, _ = self.wait_for_img_diff_within_thresh(min_ratio, np.inf, t_rep)
@@ -109,8 +110,8 @@ class Camera:
             if t_motion < t_max and ratio_final < max_ratio and ratio_final > min_ratio: # ratio_max < max_ratio and
                 
                 #Testing
-                cv2.imwrite(image_before_link, img_before)
-                cv2.imwrite(image_after_link, img_after)
+                #cv2.imwrite(image_before_link, img_before)
+                #cv2.imwrite(image_after_link, img_after)
                 #global img_count
                 #dbx.img_upload(image_before_link,'/Images/Session_2020_30_12/before_{}_{}.jpg'.format(self.src, img_count))
                 #dbx.img_upload(image_after_link,'/Images/Session_2020_30_12/after_{}_{}.jpg'.format(self.src, img_count))
@@ -118,10 +119,10 @@ class Camera:
 
                 self.dartThrow = dartThrowClass.dartThrow(img_before,img_after, self.src)
                 self.motionRatio = ratio_final
-                self.motionDetected = True
+                self.stopMotionThread = True
                 return
             else:
-                self.motionDetected = True
+                self.stopMotionThread = True
                 self.motionRatio = False
                 self.dartThrow = None
                 return

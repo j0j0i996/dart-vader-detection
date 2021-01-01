@@ -109,7 +109,8 @@ class dartThrow:
         height, width = diff.shape[:2]
 
         # Filter features by drawing line through them
-        while True:
+        max_iter = 10 # should not be reached, but limited to avoid infinite loops
+        for _ in range(max_iter):
             [vx, vy, x0, y0] = cv2.fitLine(cnt_pts, cv2.DIST_L2, 0, 0.1, 0.1) #dist_L1 cost function is p(r)=r, dist_L2 cost function is p(r)=r^2
             line = [vx, vy, x0, y0]
             lefty = int((-x0 * vy / vx) + y0)
