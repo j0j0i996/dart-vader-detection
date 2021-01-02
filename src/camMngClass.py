@@ -49,6 +49,14 @@ class camManager:
         for cam in self.cam_list:
             cam.stop()
 
+    def take_pic(self):
+        for cam in self.cam_list:
+            cam.take_pic()
+
+    def manual_calibration(self):
+        for cam in self.cam_list:
+            cam.manual_calibration()
+
     def detection(self):
         
         # start motion detection

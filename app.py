@@ -32,23 +32,15 @@ if __name__ == '__main__':
     camManager.start_cams()
     app.run(host='0.0.0.0', port='8090') #, debug=True
 
-
-    #for cam in camManager.cam_list:
-    #   cam.manual_calibration()
-
-    #camManager.cam_list[0].calibrate_board(12)
-    #camManager.cam_list[1].calibrate_board(3)
-    #camManager.cam_list[2].calibrate_board(4)
+    #camManager.take_pic()
+    #camManager.manual_calibration()
 
     #camManager.start_cams()
     #while True:
         #camManager.motion_detection()
-        
-    #time.sleep(1)
+
     #camManager.stop_cams()
-    #print('end')
+        
     #img = cv2.imread('static/jpg/test_0.jpg')
-    #print(camera.board.h)
     #imgWarp = cv2.warpPerspective(img,camManager.cam_list[0].board.h,(800,800))
-    #img = camera.cap.read() 
     #cv2.imwrite('static/jpg/warp.jpg', imgWarp)
