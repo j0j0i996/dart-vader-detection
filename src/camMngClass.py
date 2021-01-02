@@ -7,7 +7,7 @@ import time
 
 class camManager:
         
-    def __init__(self, width = 512, height = 384):
+    def __init__(self, width = 640, height = 360):
 
         self.width = width
         self.height = height
@@ -72,19 +72,17 @@ class camManager:
                 if cam.stopMotionThread:
                     motion = True
         
-        time.sleep(0.2)
+        time.sleep(0.25)
 
-        ratio_list = []
+        dect_cams = []
         end_of_turn = False
         for cam in self.cam_list:
                 if cam.stopMotionThread: # get information of cameras which detected motion
-                    ratio_list.append({'cam':cam, 'src':cam.src, 'ratio': cam.motionRatio})
+                    dect_cams.append({'cam':cam, 'src':cam.src, 'ratio': cam.motionRatio, 'p1': None, 'p2': None})
                     if cam.motionRatio == False:
                         end_of_turn = True
                 else:
                     cam.stopMotionThread = True # stops motion detection of other cameras
-
-        print(ratio_list)
 
         if end_of_turn:
             score = False
@@ -92,9 +90,9 @@ class camManager:
             std_pos = None
             print('End of turn')
         else:
-            if len(ratio_list) == 1:
+            if len(dect_cams) == 1:
                 print('point')
-                cam = ratio_list[0]['cam']
+                cam = dect_cams[0]['cam']
                 rel_pos = cam.dartThrow.get_pos(format = 'point')
                 std_pos = cam.board.rel2std(rel_pos)
 
@@ -107,14 +105,21 @@ class camManager:
                 event = 'Dart'
             else:
                 print('line')
-                filter_list = sorted(ratio_list, key=lambda k: k['ratio'], reverse = True)[0:2]
-                cams = [x['cam'] for x in filter_list]
+                #filter_list = sorted(ratio_list, key=lambda k: k['ratio'], reverse = True)[0:2]
+                cams = [x['cam'] for x in dect_cams]
 
                 line_list = []
-                for cam in cams:
-                    p1, p2 = cam.dartThrow.get_pos(format = 'line')
-                    p1 = cam.board.rel2std(p1)
-                    p2 = cam.board.rel2std(p2)
+                for item in dect_cams:
+                    item['p1'], item['p2'] = item['cam'].dartThrow.get_pos(format = 'line')
+
+                # prioritize cams:
+                # current priorization method: take most vertical line
+                dect_cams = sorted(dect_cams,key = lambda k: abs(k['p1'][0] - k['p2'][0]))
+                print(str(dect_cams[0]['cam']) + str(dect_cams[1]['cam']))
+
+                for item in dect_cams[0:2]:
+                    p1 = item['cam'].board.rel2std(item['p1'])
+                    p2 = item['cam'].board.rel2std(item['p2'])
                     line_list.append([p1,p2])
 
                 std_pos = self.line_intersection(line_list[0],line_list[1])

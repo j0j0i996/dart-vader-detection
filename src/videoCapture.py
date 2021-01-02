@@ -6,7 +6,7 @@ import time
 rotations = [None, cv2.ROTATE_90_CLOCKWISE, cv2.ROTATE_180, cv2.ROTATE_90_COUNTERCLOCKWISE]
 
 class VideoStream:
-    def __init__(self, src=0, width = 640, height = 480, rot = 0):
+    def __init__(self, src, width, height, rot = 0):
         # initialize the video camera stream and read the first frame
         # from the stream
         try:

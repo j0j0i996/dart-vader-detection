@@ -39,7 +39,7 @@ if __name__ == '__main__':
     #while True:
         #camManager.motion_detection()
 
-    #camManager.stop_cams()
+    camManager.stop_cams()
         
     #img = cv2.imread('static/jpg/test_0.jpg')
     #imgWarp = cv2.warpPerspective(img,camManager.cam_list[0].board.h,(800,800))

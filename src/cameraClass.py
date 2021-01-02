@@ -16,7 +16,7 @@ img_count = 55
 
 class Camera:
         
-    def __init__(self, src = 0, width = 640, height = 480, rot = 0):
+    def __init__(self, src, width, height, rot = 0):
 
         self.src = src
         self.cap = videoCapture.VideoStream(src = src, width = width, height = height, rot = rot)
@@ -84,10 +84,11 @@ class Camera:
         print('Waiting for motion')
         
         #Parameters
-        t_rep = 0.16 # Take a picure every t_repeat seconds
+        t_rep = 0.12 # Take a picure every t_repeat seconds
         t_max = 0.48 # Maximum time the motion should take time - hereby we can distinguish between dart throw and human
-        min_ratio = 0.002 #Thresholds important - make accessible / dynamic - between 0 and 1
+        min_ratio = 0.0005 #Thresholds important - make accessible / dynamic - between 0 and 1
         max_ratio = 0.03
+        dect_ratio = min_ratio / 100
 
         #Testing
         image_before_link = 'static/jpg/before_{}.jpg'.format(self.src)
@@ -97,10 +98,10 @@ class Camera:
         while self.stopMotionThread == False:
 
             # Wait for motion
-            img_before, img_start_motion, _ = self.wait_for_img_diff_within_thresh(min_ratio, np.inf, t_rep)
+            img_before, img_start_motion, _ = self.wait_for_img_diff_within_thresh(dect_ratio, np.inf, t_rep)
 
             # Wait for motion to stop
-            _, img_after, t_motion = self.wait_for_img_diff_within_thresh(0, min_ratio, t_rep, start_image = img_start_motion)
+            _, img_after, t_motion = self.wait_for_img_diff_within_thresh(0, dect_ratio, t_rep, start_image = img_start_motion)
 
             # Get difference ratio of image befor motion and image after motion
             ratio_final = Camera.get_img_diff_ratio(img_before,img_after)
@@ -108,10 +109,11 @@ class Camera:
             # Criteria for being a dart:
             # time of motion, maximum object smaller max treshold, size of final object in thresholds
             if t_motion < t_max and ratio_final < max_ratio and ratio_final > min_ratio: # ratio_max < max_ratio and
+                #dart detected
                 
                 #Testing
-                #cv2.imwrite(image_before_link, img_before)
-                #cv2.imwrite(image_after_link, img_after)
+                cv2.imwrite(image_before_link, img_before)
+                cv2.imwrite(image_after_link, img_after)
                 #global img_count
                 #dbx.img_upload(image_before_link,'/Images/Session_2020_30_12/before_{}_{}.jpg'.format(self.src, img_count))
                 #dbx.img_upload(image_after_link,'/Images/Session_2020_30_12/after_{}_{}.jpg'.format(self.src, img_count))
@@ -121,7 +123,8 @@ class Camera:
                 self.motionRatio = ratio_final
                 self.stopMotionThread = True
                 return
-            else:
+            elif t_motion > t_max or ratio_final > max_ratio:
+                #hand detected
                 self.stopMotionThread = True
                 self.motionRatio = False
                 self.dartThrow = None
