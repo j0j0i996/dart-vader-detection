@@ -72,7 +72,7 @@ class camManager:
                 if cam.stopMotionThread:
                     motion = True
         
-        time.sleep(0.25)
+        time.sleep(0.35)
 
         dect_cams = []
         end_of_turn = False
@@ -114,8 +114,8 @@ class camManager:
 
                 # prioritize cams:
                 # current priorization method: take most vertical line
-                dect_cams = sorted(dect_cams,key = lambda k: abs(k['p1'][0] - k['p2'][0]))
-                print(str(dect_cams[0]['cam']) + str(dect_cams[1]['cam']))
+                dect_cams = sorted(dect_cams,key = lambda k: abs(k['p1'][0] - self.width / 2))
+                print('cam:' + str(dect_cams[0]['src']) + '\n cam:' + str(dect_cams[1]['src']))
 
                 for item in dect_cams[0:2]:
                     p1 = item['cam'].board.rel2std(item['p1'])
