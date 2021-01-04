@@ -76,15 +76,13 @@ class Camera:
         
         self.stopMotionThread = False
         self.motionRatio = 0
-
-        print('Waiting for motion')
         
         #Parameters
-        t_rep = 0.16 # Take a picure every t_repeat seconds
-        t_max = 0.48 # Maximum time the motion should take time - hereby we can distinguish between dart throw and human
-        min_ratio = 0.0005 #Thresholds important - make accessible / dynamic - between 0 and 1
+        t_rep = 0.12 # Take a picure every t_repeat seconds
+        t_max = 0.36 # Maximum time the motion should take time - hereby we can distinguish between dart throw and human
+        min_ratio = 0.0003 #Thresholds important - make accessible / dynamic - between 0 and 1
         max_ratio = 0.03
-        dect_ratio = min_ratio / 100
+        dect_ratio = min_ratio / 10
 
         #Testing
         image_before_link = 'static/jpg/before_{}.jpg'.format(self.src)

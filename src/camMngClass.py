@@ -65,6 +65,8 @@ class camManager:
             t = Thread(target=cam.dart_motion_dect, args=())
             t.start()
             t_list.append(t)
+
+        print('Waiting for motion')
         
         motion = False
         while motion == False:
@@ -72,7 +74,7 @@ class camManager:
                 if cam.stopMotionThread:
                     motion = True
         
-        time.sleep(0.35)
+        time.sleep(0.4)
 
         dect_cams = []
         end_of_turn = False

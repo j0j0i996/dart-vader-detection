@@ -52,7 +52,7 @@ class VideoStream:
         if self.rotCode is not None:
             frame = cv2.rotate(frame, self.rotCode)
         
-        self.count_last_read = self.image_count
+        self.last_read_count = self.update_count
         return frame, success
 
     def stop(self):
