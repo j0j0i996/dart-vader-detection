@@ -18,6 +18,8 @@ class VideoStream:
         self.stream.set(4, height)
         self.stream.set(cv2.CAP_PROP_EXPOSURE,-5)
         self.rotCode = rotations[int(rot/90)]
+        self.update_count = 0
+        self.last_read_count = 0
 
         self.frame = None
         self.success = None
@@ -37,14 +39,20 @@ class VideoStream:
         time.sleep(3)
         while self.running:
             (self.success, self.frame) = self.stream.read()
+            self.update_count = self.update_count + 1
 
     def read(self):
         # return the frame most recently read
         frame, success = self.frame, self.success
+        while True:
+            frame, success = self.frame, self.success
+            if self.update_count > self.last_read_count and success == True:
+                break
         
         if self.rotCode is not None:
             frame = cv2.rotate(frame, self.rotCode)
         
+        self.count_last_read = self.image_count
         return frame, success
 
     def stop(self):

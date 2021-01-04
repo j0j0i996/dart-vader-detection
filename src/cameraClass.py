@@ -11,16 +11,12 @@ import src.dropbox_integration as dbx
 import sqlite3 
 import json
 
-#testing
-img_count = 55
-
 class Camera:
         
     def __init__(self, src, width, height, rot = 0):
 
         self.src = src
         self.cap = videoCapture.VideoStream(src = src, width = width, height = height, rot = rot)
-        self.img_count = 0
         
         # get transformation from sql
         h = db.get_trafo(self.src)
@@ -84,7 +80,7 @@ class Camera:
         print('Waiting for motion')
         
         #Parameters
-        t_rep = 0.12 # Take a picure every t_repeat seconds
+        t_rep = 0.16 # Take a picure every t_repeat seconds
         t_max = 0.48 # Maximum time the motion should take time - hereby we can distinguish between dart throw and human
         min_ratio = 0.0005 #Thresholds important - make accessible / dynamic - between 0 and 1
         max_ratio = 0.03
@@ -137,18 +133,12 @@ class Camera:
         t = 0
         ratio_max = 0
         if start_image is None:
-            
-            success = False
-            while success is False:
-                img1, success= self.cap.read()
-
+            img1, success= self.cap.read()
             time.sleep(t_rep)
         else:
             img1 = start_image
 
-        success = False
-        while success is False:
-                img2, success = self.cap.read()
+        img2, success = self.cap.read()
 
         img_diff_ratio = Camera.get_img_diff_ratio(img1, img2)
 
@@ -158,9 +148,7 @@ class Camera:
             time.sleep(t_rep)
             img1 = img2.copy()
 
-            success = False
-            while success == False:
-                img2, success = self.cap.read()
+            img2, _ = self.cap.read()
 
             # Get ratio of difference pixels between first and second image
             img_diff_ratio = Camera.get_img_diff_ratio(img1, img2)
