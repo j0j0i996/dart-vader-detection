@@ -2,6 +2,7 @@
 from threading import Thread
 import cv2
 import time
+import numpy as np
 
 rotations = [None, cv2.ROTATE_90_CLOCKWISE, cv2.ROTATE_180, cv2.ROTATE_90_COUNTERCLOCKWISE]
 
@@ -14,9 +15,17 @@ class VideoStream:
         except:
             print("Cam is invalid.")
 
-        self.stream.set(3, width)
-        self.stream.set(4, height)
-        self.stream.set(cv2.CAP_PROP_EXPOSURE,-5)
+
+        codec = 0x47504A4D
+        #codec = cv2.VideoWriter_fourcc(*'X264')
+        #fourcc = cv.CV_FOURCC(*'H264')
+        #self.stream.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'X264'))
+        #codec = cv2.VideoWriter('output.mp4',fourcc, 15, size)
+        self.stream.set(cv2.CAP_PROP_FOURCC, codec)
+        self.stream.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+        self.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+        #self.stream.set(cv2.CAP_PROP_FPS, 10.0)
+        self.stream.set(cv2.CAP_PROP_EXPOSURE,-11)
         self.rotCode = rotations[int(rot/90)]
         self.update_count = 0
         self.last_read_count = 0
@@ -36,9 +45,10 @@ class VideoStream:
 
     def update(self):
         # keep looping infinitely until the thread is stopped
-        time.sleep(3)
         while self.running:
-            (self.success, self.frame) = self.stream.read()
+            success, frame = self.stream.read()
+            cv2.normalize(frame, frame, 10, 210, cv2.NORM_MINMAX)
+            self.success, self.frame = success, frame
             self.update_count = self.update_count + 1
 
     def read(self):

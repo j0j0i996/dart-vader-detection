@@ -30,14 +30,19 @@ def get_score():
 if __name__ == '__main__':
     atexit.register(exit_handler)
     camManager.start_cams()
-    app.run(host='0.0.0.0', port='8090') #, debug=True
+    #app.run(host='0.0.0.0', port='8090') #, debug=True
 
-    #camManager.take_pic()
+    #time.sleep(2)
+    camManager.take_pic()
+    #for _ in range(30):
+        #camManager.take_pic()
+    #    time.sleep(0.3)
+    
     #camManager.manual_calibration()
 
     #camManager.start_cams()
     #while True:
-        #camManager.motion_detection()
+        #camManager.detection()
 
     camManager.stop_cams()
         
