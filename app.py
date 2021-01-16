@@ -30,10 +30,10 @@ def get_score():
 if __name__ == '__main__':
     atexit.register(exit_handler)
     camManager.start_cams()
-    #app.run(host='0.0.0.0', port='8090') #, debug=True
+    app.run(host='0.0.0.0', port='8090') #, debug=True
 
     #time.sleep(2)
-    camManager.take_pic()
+    #camManager.take_pic()
     #for _ in range(30):
         #camManager.take_pic()
     #    time.sleep(0.3)
@@ -41,8 +41,8 @@ if __name__ == '__main__':
     #camManager.manual_calibration()
 
     #camManager.start_cams()
-    while True:
-        camManager.detection()
+    #while True:
+        #camManager.detection()
     
     
     #img = cv2.imread('static/jpg/last_4.jpg')

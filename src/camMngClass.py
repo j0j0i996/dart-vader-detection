@@ -7,12 +7,12 @@ import time
 
 class camManager:
         
-    def __init__(self, width = 360, height = 320):
+    def __init__(self, width = 640, height = 480):
 
         self.width = width
         self.height = height
-        #self.src_list = self.get_srcs()
-        self.src_list = [0, 2, 4]
+        self.src_list = self.get_srcs()
+        #self.src_list = [0, 2, 4]
         self.cam_list = self.activate_cams()
 
         print(self.src_list)
@@ -74,7 +74,7 @@ class camManager:
                 if cam.stopMotionThread:
                     motion = True
         
-        time.sleep(1)
+        time.sleep(0.3)
 
         dect_cams = []
         end_of_turn = False

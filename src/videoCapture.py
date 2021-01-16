@@ -15,17 +15,10 @@ class VideoStream:
         except:
             print("Cam is invalid.")
 
-        #codec = cv2.VideoWriter_fourcc(*'X264')
-        #fourcc = cv.CV_FOURCC(*'H264')
-        #self.stream.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'X264'))
-        #codec = cv2.VideoWriter('output.mp4',fourcc, 15, size)
-        #self.stream.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-        #self.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
-
         codec = 0x47504A4D
         self.stream.set(cv2.CAP_PROP_FOURCC, codec)
-        self.width = 360
-        self.height = 320
+        self.width = width
+        self.height = height
         self.stream.set(cv2.CAP_PROP_EXPOSURE,-4)
         self.rotCode = rotations[int(rot/90)]
         self.update_count = 0
@@ -40,8 +33,6 @@ class VideoStream:
     def start(self):
         # start the thread to read frames from the video stream
         self.running = True
-        #with concurrent.futures.ThreadPoolExecutor() as executor:
-            #executor.submit(self.update)
         self.t = Thread(target=self.update, args=()).start()
 
     def update(self):

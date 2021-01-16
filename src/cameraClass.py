@@ -83,7 +83,7 @@ class Camera:
         t_rep = 0.12 # Take a picure every t_repeat seconds
         t_max = 0.36 # Maximum time the motion should take time - hereby we can distinguish between dart throw and human
         min_ratio = 0.0003 #Thresholds important - make accessible / dynamic - between 0 and 1
-        max_ratio = 0.03
+        max_ratio = 0.035
         dect_ratio = min_ratio / 10
 
         #Testing
@@ -108,12 +108,12 @@ class Camera:
                 #dart detected
                 
                 #Testing
-                cv2.imwrite(image_before_link, img_before)
-                cv2.imwrite(image_after_link, img_after)
-                global img_count
-                dbx.img_upload(image_before_link,'/Images/Session_2021_01_16_2/before_{}_{}.jpg'.format(self.src, img_count))
-                dbx.img_upload(image_after_link,'/Images/Session_2021_01_16_2/after_{}_{}.jpg'.format(self.src, img_count))
-                img_count = img_count + 1
+                #cv2.imwrite(image_before_link, img_before)
+                #cv2.imwrite(image_after_link, img_after)
+                #global img_count
+                #dbx.img_upload(image_before_link,'/Images/Session_2021_01_16_2/before_{}_{}.jpg'.format(self.src, img_count))
+                #dbx.img_upload(image_after_link,'/Images/Session_2021_01_16_2/after_{}_{}.jpg'.format(self.src, img_count))
+                #img_count = img_count + 1
 
                 self.dartThrow = dartThrowClass.dartThrow(img_before,img_after, self.src)
                 self.motionRatio = ratio_final

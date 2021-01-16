@@ -33,7 +33,7 @@ class dartThrow:
         box = self.get_dart_box(diffBlur)
 
         # Second: fit line through contour
-        line = self.get_line(diffBlur, box)
+        line, features = self.get_line(diffBlur, box)
 
         if format == 'line':
             [vx, vy, x0, y0] = line
@@ -49,7 +49,7 @@ class dartThrow:
             
         elif format == 'point':
             ctn_pts = self.get_dart_cnt(diffBlur)
-            pos = self.get_tip_pos(cnt_pts, line, width)
+            pos = self.get_tip_pos(features, line, width)
 
             #Testing
             cv2.drawMarker(imgAf, (int(pos[0]), int(pos[1])), color=(0, 76, 252), markerSize = 40, thickness = 2)
@@ -230,7 +230,7 @@ class dartThrow:
 
             features = np.delete(features, [features_to_delete], axis=0)  # delete corners to form new array
 
-        return line
+        return line, features
 
 if __name__ == '__main__':
     dart = dartThrow('static/jpg/before.jpg', 'static/jpg/after.jpg')
