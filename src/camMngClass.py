@@ -7,7 +7,7 @@ import time
 
 class camManager:
         
-    def __init__(self, width = 640, height = 360):
+    def __init__(self, width = 360, height = 320):
 
         self.width = width
         self.height = height

@@ -88,13 +88,15 @@ class dartThrow:
         #Testing
         #cv2.imwrite('static/jpg/diff_{}.jpg'.format(self.src), diff)
 
+        height, width = diff.shape[:2]
+
         # Get binary image
         ret, binary_img = cv2.threshold(diff, 60, 255, 0) #Important threshold
         #Testing
         #cv2.imwrite('static/jpg/binary_{}.jpg'.format(self.src), binary_img)
 
         # Get contours
-        kernel = np.ones((50,30),np.float32)
+        kernel = np.ones((int(height * 0.15),int(width * 0.075)),np.float32) #Important thresholds
         binary_img = cv2.morphologyEx(binary_img, cv2.MORPH_CLOSE, kernel)
         #Testing
         #cv2.imwrite('static/jpg/morph_{}.jpg'.format(self.src), binary_img)
@@ -120,7 +122,7 @@ class dartThrow:
         height, width = diff.shape[:2]
 
         # Filter features by drawing line through them
-        max_iter = 10 #limited to avoid infinite loops
+        max_iter = 3 #limited to avoid infinite loops
         for _ in range(max_iter):
             [vx, vy, x0, y0] = cv2.fitLine(cnt_pts, cv2.DIST_L2, 0, 0.1, 0.1) #dist_L1 cost function is p(r)=r, dist_L2 cost function is p(r)=r^2
             line = [vx, vy, x0, y0]
@@ -137,7 +139,7 @@ class dartThrow:
                 # check distance to fitted line, only draw corners within certain range
                 p3 = np.array([x,y])
                 distance = abs(np.cross(p2-p1,p3-p1)/np.linalg.norm(p2-p1))
-                if distance > 20:  # threshold important
+                if distance > width * 0.05:  # threshold important
                     pts_to_delete.append(i)
 
                 i += 1
