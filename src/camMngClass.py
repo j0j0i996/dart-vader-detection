@@ -74,7 +74,7 @@ class camManager:
                 if cam.stopMotionThread:
                     motion = True
         
-        time.sleep(0.4)
+        time.sleep(1)
 
         dect_cams = []
         end_of_turn = False
