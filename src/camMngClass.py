@@ -11,8 +11,8 @@ class camManager:
 
         self.width = width
         self.height = height
-        self.src_list = self.get_srcs()
-        #self.src_list = [0]
+        #self.src_list = self.get_srcs()
+        self.src_list = [0, 2, 4]
         self.cam_list = self.activate_cams()
 
         print(self.src_list)

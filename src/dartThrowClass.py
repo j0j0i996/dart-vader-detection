@@ -82,16 +82,27 @@ class dartThrow:
 
         return tip_pos
 
-    @staticmethod
-    def get_dart_cnt(diff):
+    #@staticmethod
+    def get_dart_cnt(self, diff):
+        
+        #Testing
+        #cv2.imwrite('static/jpg/diff_{}.jpg'.format(self.src), diff)
 
         # Get binary image
         ret, binary_img = cv2.threshold(diff, 60, 255, 0) #Important threshold
+        #Testing
+        #cv2.imwrite('static/jpg/binary_{}.jpg'.format(self.src), binary_img)
 
         # Get contours
-        kernel = np.ones((9,2),np.float32)
+        kernel = np.ones((50,30),np.float32)
         binary_img = cv2.morphologyEx(binary_img, cv2.MORPH_CLOSE, kernel)
+        #Testing
+        #cv2.imwrite('static/jpg/morph_{}.jpg'.format(self.src), binary_img)
         contours, hierarchy = cv2.findContours(binary_img, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+
+        #Testing
+        #contour_img = cv2.drawContours(diff, contours, -1, (255,255,255), 3)
+        #cv2.imwrite('static/jpg/contour_{}.jpg'.format(self.src), contour_img)
 
         cnt_pts = None
         for cnt in contours:
@@ -126,7 +137,7 @@ class dartThrow:
                 # check distance to fitted line, only draw corners within certain range
                 p3 = np.array([x,y])
                 distance = abs(np.cross(p2-p1,p3-p1)/np.linalg.norm(p2-p1))
-                if distance > 10:  # threshold important
+                if distance > 20:  # threshold important
                     pts_to_delete.append(i)
 
                 i += 1

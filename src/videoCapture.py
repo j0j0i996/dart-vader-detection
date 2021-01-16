@@ -15,17 +15,18 @@ class VideoStream:
         except:
             print("Cam is invalid.")
 
-
-        codec = 0x47504A4D
         #codec = cv2.VideoWriter_fourcc(*'X264')
         #fourcc = cv.CV_FOURCC(*'H264')
         #self.stream.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'X264'))
         #codec = cv2.VideoWriter('output.mp4',fourcc, 15, size)
+        #self.stream.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+        #self.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+
+        codec = 0x47504A4D
         self.stream.set(cv2.CAP_PROP_FOURCC, codec)
-        self.stream.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
-        self.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
-        #self.stream.set(cv2.CAP_PROP_FPS, 10.0)
-        self.stream.set(cv2.CAP_PROP_EXPOSURE,-11)
+        self.width = 360
+        self.height = 320
+        self.stream.set(cv2.CAP_PROP_EXPOSURE,-4)
         self.rotCode = rotations[int(rot/90)]
         self.update_count = 0
         self.last_read_count = 0
@@ -47,7 +48,9 @@ class VideoStream:
         # keep looping infinitely until the thread is stopped
         while self.running:
             success, frame = self.stream.read()
-            cv2.normalize(frame, frame, 10, 210, cv2.NORM_MINMAX)
+            dim = (self.width, self.height)
+            frame = cv2.resize(frame, dim, interpolation = cv2.INTER_AREA)
+            cv2.normalize(frame, frame, 0, 220, cv2.NORM_MINMAX)
             self.success, self.frame = success, frame
             self.update_count = self.update_count + 1
 

@@ -18,7 +18,7 @@ MarkupSafe==1.1.1
 monotonic==1.5
 mujoco-py==0.5.7
 numpy==1.19.4
-opencv-python==4.4.0.46
+opencv-python-headless==4.5.1.48
 packaging==20.4
 picamera==1.13
 Pillow==8.0.1

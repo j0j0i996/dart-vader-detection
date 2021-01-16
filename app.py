@@ -41,10 +41,15 @@ if __name__ == '__main__':
     #camManager.manual_calibration()
 
     #camManager.start_cams()
-    #while True:
-        #camManager.detection()
+    while True:
+        camManager.detection()
+    
+    
+    #img = cv2.imread('static/jpg/last_4.jpg')
+    #print(img.shape)
 
-    camManager.stop_cams()
+
+    #camManager.stop_cams()
         
     #img = cv2.imread('static/jpg/test_0.jpg')
     #imgWarp = cv2.warpPerspective(img,camManager.cam_list[0].board.h,(800,800))
