@@ -23,34 +23,20 @@ def index():
 
 @app.route('/wait_throw')
 def get_score():
-    score, event, std_pos = camManager.detection()
-    return json.dumps({'score': score, 'event': event})
-    #return json.dumps({'score': score, 'event': event, 'pos_x': int(std_pos[0]), 'pos_y': int(std_pos[1])})
+    score, multiplier, nextPlayer = camManager.detection()
+    return json.dumps({'score': score, 'multiplier': multiplier, 'nextPlayer': nextPlayer})
 
 if __name__ == '__main__':
     atexit.register(exit_handler)
     camManager.start_cams()
     app.run(host='0.0.0.0', port='8090') #, debug=True
 
-    #time.sleep(2)
     #camManager.take_pic()
-    #for _ in range(30):
-        #camManager.take_pic()
-    #    time.sleep(0.3)
     
     #camManager.manual_calibration()
 
     #camManager.start_cams()
     #while True:
         #camManager.detection()
-    
-    
-    #img = cv2.imread('static/jpg/last_4.jpg')
-    #print(img.shape)
-
 
     #camManager.stop_cams()
-        
-    #img = cv2.imread('static/jpg/test_0.jpg')
-    #imgWarp = cv2.warpPerspective(img,camManager.cam_list[0].board.h,(800,800))
-    #cv2.imwrite('static/jpg/warp.jpg', imgWarp)

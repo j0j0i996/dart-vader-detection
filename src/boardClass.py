@@ -17,8 +17,8 @@ class Board:
     def get_score(self, std_pos):
 
             std_polar_pos = self.carth2pol(std_pos)
-            score = self.pol2score(std_polar_pos)
-            return score
+            score, multiplier = self.pol2score(std_polar_pos)
+            return score, multiplier
 
     def rel2std(self, pos_src):
         # [x_src,y_scr,1]
@@ -57,19 +57,25 @@ class Board:
 
         if r_in_mm < 6.35: 
             score = 50
+            multiplier = 2
         elif r_in_mm < 15.9:
             score = 25
+            multiplier = 1
         elif r_in_mm < 99 or (r_in_mm > 107 and r_in_mm < 162):
             score = single_score
+            multiplier = 1
         elif r_in_mm > 99 and r_in_mm < 107:
              score = 3 * single_score
+             multiplier = 3
         elif r_in_mm > 162 and r_in_mm < 170:
              score = 2 * single_score
+             multiplier = 2
         else:
             score = 0
+            multiplier = 0
 
         print(score)
-        return score
+        return score, multiplier
 
     def calibration(self, img, closest_field = 20):
         src = self.get_src_points(img, closest_field = closest_field)
