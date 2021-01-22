@@ -4,10 +4,11 @@ import cv2
 import time
 import numpy as np
 import time
+import datetime
 
 class camManager:
         
-    def __init__(self, width = 640, height = 480):
+    def __init__(self, width = 400, height = 320):
 
         self.width = width
         self.height = height
@@ -58,88 +59,120 @@ class camManager:
             cam.manual_calibration()
 
     def detection(self):
-        
-        # start motion detection
-        t_list = []
-        for cam in self.cam_list:
-            t = Thread(target=cam.dart_motion_dect, args=())
-            t.start()
-            t_list.append(t)
 
-        print('Waiting for motion')
-        
-        motion = False
-        while motion == False:
+        #try:
+            # start motion detection
+            t_list = []
             for cam in self.cam_list:
-                if cam.stopMotionThread:
-                    motion = True
-        
-        time.sleep(0.3)
+                t = Thread(target=cam.dart_motion_dect, args=())
+                t.start()
+                t_list.append(t)
 
-        dect_cams = []
-        nextPlayer = False
-        for cam in self.cam_list:
-                if cam.stopMotionThread: # get information of cameras which detected motion
-                    dect_cams.append({'cam':cam, 'src':cam.src, 'ratio': cam.motionRatio, 'p1': None, 'p2': None})
-                    if cam.motionRatio == False:
-                        nextPlayer = True
-                else:
-                    cam.stopMotionThread = True # stops motion detection of other cameras
+            print('Waiting for motion')
+            
+            motion = False
+            while motion == False:
+                for cam in self.cam_list:
+                    if cam.stopMotionThread:
+                        motion = True
+            
+            # wait for other cams to dect motion
+            time.sleep(0.2)
 
-        if nextPlayer:
-            score = False
-            multiplier = False
-            std_pos = None
-            print('End of turn')
-        else:
+            t1 = datetime.datetime.now()
+
+            dect_cams = []
             nextPlayer = False
-            if len(dect_cams) == 1:
-                print('point')
-                cam = dect_cams[0]['cam']
-                rel_pos = cam.dartThrow.get_pos(format = 'point')
-                std_pos = cam.board.rel2std(rel_pos)
+            for cam in self.cam_list:
+                    if cam.stopMotionThread: # get information of cameras which detected motion
+                        dect_cams.append({'cam':cam, 'src':cam.src, 'single_pt': None, 'line_pts': None})
+                        if cam.is_hand_motion:
+                            nextPlayer = True
+                    else:
+                        cam.stopMotionThread = True # stops motion detection of other cameras
 
-                #testing
-                img = cam.board.draw_board()
-                cv2.circle(img, (int(std_pos[0]), int(std_pos[1])), 3, (255,0,0), 2)
-                cv2.imwrite('static/jpg/line_detection.jpg', img)
-
-                score, multiplier = cam.board.get_score(std_pos)
+            if nextPlayer:
+                time.sleep(1)
+                score = False
+                multiplier = False
+                std_pos = None
+                print('End of turn')
             else:
-                print('line')
-                #filter_list = sorted(ratio_list, key=lambda k: k['ratio'], reverse = True)[0:2]
-                cams = [x['cam'] for x in dect_cams]
+                nextPlayer = False
 
+                single_pt_list = []
                 line_list = []
                 for item in dect_cams:
-                    item['p1'], item['p2'] = item['cam'].dartThrow.get_pos(format = 'line')
+                    single_pt_rel, line_rel = item['cam'].dartThrow.get_pos()
 
-                # prioritize cams:
-                # current priorization method: take most vertical line
-                dect_cams = sorted(dect_cams,key = lambda k: abs(k['p1'][0] - self.width / 2))
-                print('cam:' + str(dect_cams[0]['src']) + '\n cam:' + str(dect_cams[1]['src']))
+                    single_pt_std = item['cam'].board.rel2std(single_pt_rel)
+                    single_pt_list.append(single_pt_std)
 
-                for item in dect_cams[0:2]:
-                    p1 = item['cam'].board.rel2std(item['p1'])
-                    p2 = item['cam'].board.rel2std(item['p2'])
-                    line_list.append([p1,p2])
+                    line_std = [item['cam'].board.rel2std(line_rel[0]),item['cam'].board.rel2std(line_rel[1])]
+                    line_list.append(line_std)
 
-                std_pos = self.line_intersection(line_list[0],line_list[1])
+                print('{} cams detected a motion'.format(len(dect_cams)))
 
-                #testing
-                img = cams[0].board.draw_board()
-                img = cv2.line(img,(int(line_list[0][0][0]),int(line_list[0][0][1])), (int(line_list[0][1][0]),int(line_list[0][1][1])), 255, 2)
-                cv2.line(img,(int(line_list[1][0][0]),int(line_list[1][0][1])), (int(line_list[1][1][0]),int(line_list[1][1][1])), 255, 2)
-                cv2.circle(img, (int(std_pos[0]), int(std_pos[1])), 3, (255,0,0), 2)
-                cv2.imwrite('static/jpg/line_detection.jpg', img)
+                if len(dect_cams) == 1:
+                    
+                    pos = single_pt_list[0]
 
-                score, multiplier = cams[0].board.get_score(std_pos)
+                    #testing
+                    #img = cam.board.draw_board()
+                    #cv2.circle(img, (int(pos[0]), int(pos[1])), 3, (255,0,0), 2)
+                    #cv2.imwrite('static/jpg/recognition.jpg', img)
 
-        # Make sure all threads are closed
-        for cam in self.cam_list:
-            cam.stopMotionThread = True
-        
-        return score, multiplier, nextPlayer
+                    score, multiplier = cam.board.get_score(pos)
+
+                else:
+                    
+                    #get two single pts which are closest together
+                    
+                    def dist(pt1, pt2):
+                        comparison = pt1 == pt2
+                        equal_arrays = comparison.all()
+                        if equal_arrays:
+                            return np.inf
+                        else:
+                            return np.linalg.norm(pt2-pt1)
+
+                    dist_matrix = np.array([np.array([dist(pt1, pt2) for pt1 in single_pt_list]) for pt2 in single_pt_list])
+                    ind = np.unravel_index(dist_matrix.argmin(), dist_matrix.shape)
+                    single_pt_list = [single_pt_list[i] for i in list(ind)]
+                    
+                    
+                    #get avg of those single points points
+                    avg_single_pt = np.mean(single_pt_list, axis = 0)
+
+                    # get interesection points of lines
+                    intersect_list = [self.line_intersection(line_list[i],line_list[j]) for i in range(len(line_list)) for j in range(len(line_list)) if i < j]
+
+                    # take intesect which is closest to avg_single_pt as dart tip pos
+                    dist_list = [np.linalg.norm(pt-avg_single_pt) for pt in intersect_list]
+                    pos = intersect_list[np.argmin(dist_list)]
+
+                    #testing
+                    img = cam.board.draw_board()
+                    for line in line_list:
+                        cv2.line(img,(int(line[0][0]),int(line[0][1])), (int(line[1][0]),int(line[1][1])), 255, 2)
+                    
+                    cv2.circle(img, (int(pos[0]), int(pos[1])), 3, (255,0,0), 2)
+                    cv2.imwrite('static/jpg/recognition.jpg', img)
+
+                    score, multiplier = cam.board.get_score(pos)
+
+            # Make sure all threads are closed
+            for cam in self.cam_list:
+                cam.stopMotionThread = True
+
+            t2 = datetime.datetime.now()
+
+            print('Total recognition time: {}'.format(t2-t1))
+            success = True
+            return score, multiplier, nextPlayer, success
+
+        #except:
+            #return False, False, False, False
 
     @staticmethod
     def line_intersection(line1, line2):
