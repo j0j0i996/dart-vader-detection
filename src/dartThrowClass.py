@@ -37,7 +37,7 @@ class dartThrow:
         # Skeltonize image
         img = binary_img
         size = np.size(img)
-        element = cv2.getStructuringElement(cv2.MORPH_CROSS ,(5,5))
+        element = cv2.getStructuringElement(cv2.MORPH_CROSS ,(3,3))
         skel = np.zeros(img.shape,np.uint8)
         done = False
         while( not done):
@@ -60,7 +60,6 @@ class dartThrow:
         skel_pts = skel_pts[skel_pts[:,0] < max_y]
         skel_pts = np.flip(skel_pts, axis=1)
 
-
         #fit line
         [vx, vy, x0, y0] = cv2.fitLine(skel_pts, cv2.DIST_HUBER, 0, 0.1, 0.1) #dist_L1 cost function is p(r)=r, dist_L2 cost function is p(r)=r^2
         line = [vx, vy, x0, y0]
@@ -75,12 +74,12 @@ class dartThrow:
         top_pt = skel_pts[0]
 
         #testing
-        #rec_img = imgAf
-        #cv2.line(rec_img,(int(top_x),0),(int(bottom_x),height - 1),(255,0,255),1)
+        rec_img = imgAf
+        cv2.line(rec_img,(int(top_x),0),(int(bottom_x),height - 1),(255,0,255),1)
 
-        #cv2.circle(rec_img,(top_pt[0], top_pt[1]), 2, (200,0,255),2)
+        cv2.circle(rec_img,(top_pt[0], top_pt[1]), 2, (200,0,255),2)
 
-        #cv2.imwrite("static/jpg/dart_line{}.jpg".format(self.src),rec_img)
+        cv2.imwrite("static/jpg/dart_line{}.jpg".format(self.src),rec_img)
 
         t2 = datetime.datetime.now()
 
