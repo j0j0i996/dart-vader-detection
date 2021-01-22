@@ -10,8 +10,6 @@ import time
 
 app = Flask(__name__)
 
-#camera = camCls.Camera(src=4, rot=180)
-#camera.calibrate_board(3)
 camManager = camMng.camManager()
 
 def exit_handler():
@@ -28,15 +26,15 @@ def get_score():
 
 if __name__ == '__main__':
     atexit.register(exit_handler)
-    camManager.start_cams()
-    app.run(host='0.0.0.0', port='8090') #, debug=True
 
     #camManager.take_pic()
     
     #camManager.manual_calibration()
 
-    #camManager.start_cams()
-    #while True:
-        #camManager.detection()
+    camManager.start_cams()
+    while True:
+        camManager.detection()
+
+    #app.run(host='0.0.0.0', port='8090') #, debug=True
 
     #camManager.stop_cams()

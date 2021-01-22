@@ -19,7 +19,8 @@ class VideoStream:
         self.stream.set(cv2.CAP_PROP_FOURCC, codec)
         self.width = width
         self.height = height
-        self.stream.set(cv2.CAP_PROP_EXPOSURE,-4)
+        #self.stream.set(cv2.CAP_PROP_EXPOSURE,-8)
+        self.stream.set(cv2.CAP_PROP_FPS,15)
         self.rotCode = rotations[int(rot/90)]
         self.update_count = 0
         self.last_read_count = 0
