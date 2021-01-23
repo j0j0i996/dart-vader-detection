@@ -29,10 +29,8 @@ class Camera:
             self.board = boardClass.Board(src = self.src)
 
         self.dartThrow = None
-        self.stopMotionThread = False
+        self.stopDectThread = False
         self.is_hand_motion = False
-        self.img_before = None
-        self.img_after = None
 
     def start(self):
         self.cap.start()
@@ -44,6 +42,8 @@ class Camera:
         if self.cap.running == False:
             self.start()
 
+        success = False
+        img = None
         max_tries = 10
         for _ in range(max_tries):
             img, success = self.cap.read()
@@ -52,7 +52,6 @@ class Camera:
 
         if success == False:
             raise Exception('Problem reading camera')
-            return
 
         cv2.imwrite('static/jpg/last_{}.jpg'.format(self.src), img)
 
@@ -78,7 +77,7 @@ class Camera:
 
         #try:
         
-            self.stopMotionThread = False
+            self.stopDectThread = False
             self.dartThrow = None
             
             #Parameters
@@ -92,13 +91,13 @@ class Camera:
             #image_before_link = 'static/jpg/before_{}.jpg'.format(self.src)
             #image_after_link = 'static/jpg/after_{}.jpg'.format(self.src)
             
-            while self.stopMotionThread == False:
+            while self.stopDectThread == False:
 
                 # Wait for motion
-                img_before, img_start_motion, _ = self.wait_for_img_diff_within_thresh(dect_ratio, np.inf, t_rep)
+                img_before, img_start_motion, _ = self.wait_diff_in_bnd(dect_ratio, np.inf, t_rep)
 
                 # Wait for motion to stop
-                _, img_after, t_motion = self.wait_for_img_diff_within_thresh(0, dect_ratio, t_rep, start_image = img_start_motion)
+                _, img_after, t_motion = self.wait_diff_in_bnd(0, dect_ratio, t_rep, start_image = img_start_motion)
 
                 # take img after motion stopped:
                 time.sleep(t_rep)
@@ -124,22 +123,22 @@ class Camera:
 
                     self.dartThrow = dartThrowClass.dartThrow(img_before,img_after, self.src)
                     self.is_hand_motion = False
-                    self.stopMotionThread = True
+                    self.stopDectThread = True
                     return
 
                 elif t_motion > t_max or ratio_final > max_ratio:
                     #hand detected
-                    self.stopMotionThread = True
+                    self.stopDectThread = True
                     self.is_hand_motion = True
                     return
 
         #except:
-        #    self.stopMotionThread = True
+        #    self.stopDectThread = True
         #    self.is_hand_motion = False
         #    self.dartThrow = None
         #    return
 
-    def wait_for_img_diff_within_thresh(self,min_ratio,max_ratio,t_rep, start_image = None):
+    def wait_diff_in_bnd(self,min_ratio,max_ratio,t_rep, start_image = None):
         img_diff_ratio = -1
         
         # Intialize while loop

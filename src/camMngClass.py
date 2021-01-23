@@ -73,7 +73,7 @@ class camManager:
             motion = False
             while motion == False:
                 for cam in self.cam_list:
-                    if cam.stopMotionThread:
+                    if cam.stopDectThread:
                         motion = True
             
             # wait for other cams to dect motion
@@ -82,20 +82,21 @@ class camManager:
             t1 = datetime.datetime.now()
 
             dect_cams = []
+            cam = None
             nextPlayer = False
             for cam in self.cam_list:
-                    if cam.stopMotionThread: # get information of cameras which detected motion
+                    if cam.stopDectThread: # get information of cameras which detected motion
                         dect_cams.append({'cam':cam, 'src':cam.src, 'single_pt': None, 'line_pts': None})
                         if cam.is_hand_motion:
                             nextPlayer = True
                     else:
-                        cam.stopMotionThread = True # stops motion detection of other cameras
+                        cam.stopDectThread = True # stops motion detection of other cameras
 
             if nextPlayer:
                 time.sleep(1)
                 score = False
                 multiplier = False
-                std_pos = None
+                pos = None
                 print('End of turn')
             else:
                 nextPlayer = False
@@ -116,18 +117,16 @@ class camManager:
                 if len(dect_cams) == 1:
                     
                     pos = single_pt_list[0]
+                    score, multiplier = cam.board.get_score(pos)
 
                     #testing
                     #img = cam.board.draw_board()
                     #cv2.circle(img, (int(pos[0]), int(pos[1])), 3, (255,0,0), 2)
                     #cv2.imwrite('static/jpg/recognition.jpg', img)
 
-                    score, multiplier = cam.board.get_score(pos)
-
                 else:
                     
                     #get two single pts which are closest together
-                    
                     def dist(pt1, pt2):
                         comparison = pt1 == pt2
                         equal_arrays = comparison.all()
@@ -163,7 +162,7 @@ class camManager:
 
             # Make sure all threads are closed
             for cam in self.cam_list:
-                cam.stopMotionThread = True
+                cam.stopDectThread = True
 
             t2 = datetime.datetime.now()
 

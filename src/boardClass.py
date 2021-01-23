@@ -10,10 +10,6 @@ class Board:
         self.h = h
         self.src = src
 
-    def __repr__(self):
-        return 'Relative board position: \n{} \nStandard board position: \n{} \nHomography matrix \n {} \n'\
-            .format(self.rel_pts, self.std_pts, self.h)
-
     def get_score(self, std_pos):
 
             std_polar_pos = self.carth2pol(std_pos)

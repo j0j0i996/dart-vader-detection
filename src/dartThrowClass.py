@@ -9,10 +9,6 @@ class dartThrow:
         self.img_after = img_after
         self.src = src
 
-    def __repr__(self):
-        return 'RelCarth Pos: {} \n\nStd Carth Pos: {} \n'\
-            .format(self.rel_carth_pos, self.std_carth_pos)
-
     def get_pos(self):
 
         t1 = datetime.datetime.now()
@@ -88,7 +84,6 @@ class dartThrow:
         return top_pt, line_pts
 
 if __name__ == '__main__':
-    dart = dartThrow('static/jpg/before.jpg', 'static/jpg/after.jpg')
-    p1, p2 = dart.get_position(format = 'line')
-    print(p1)
-    print(p2)
+    #dart = dartThrow('static/jpg/before.jpg', 'static/jpg/after.jpg')
+    #p1, p2 = dart.get_position(format = 'line')
+    pass

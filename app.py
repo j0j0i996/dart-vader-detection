@@ -21,7 +21,7 @@ def index():
 
 @app.route('/wait_throw')
 def get_score():
-    score, multiplier, nextPlayer = camManager.detection()
+    score, multiplier, nextPlayer, success = camManager.detection()
     return json.dumps({'score': score, 'multiplier': multiplier, 'nextPlayer': nextPlayer})
 
 if __name__ == '__main__':
@@ -31,7 +31,7 @@ if __name__ == '__main__':
 
     #camManager.take_pic()
 
-    camManager.manual_calibration()
+    #camManager.manual_calibration()
     #camManager.cam_list[0].calibrate_board(1)
     #camManager.cam_list[2].calibrate_board(11)
     #camManager.cam_list[4].calibrate_board(2) 
