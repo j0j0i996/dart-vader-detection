@@ -11,16 +11,14 @@ import src.dropbox_integration as dbx
 import sqlite3 
 import json
 
-#testing
-img_count = 55
+img_count = 0
 
 class Camera:
         
-    def __init__(self, src = 0, width = 640, height = 480, rot = 0):
+    def __init__(self, src, width, height, rot = 0):
 
         self.src = src
         self.cap = videoCapture.VideoStream(src = src, width = width, height = height, rot = rot)
-        self.img_count = 0
         
         # get transformation from sql
         h = db.get_trafo(self.src)
@@ -31,10 +29,8 @@ class Camera:
             self.board = boardClass.Board(src = self.src)
 
         self.dartThrow = None
-        self.stopMotionThread = False
-        self.motionRatio = 0
-        self.img_before = None
-        self.img_after = None
+        self.stopDectThread = False
+        self.is_hand_motion = False
 
     def start(self):
         self.cap.start()
@@ -46,6 +42,8 @@ class Camera:
         if self.cap.running == False:
             self.start()
 
+        success = False
+        img = None
         max_tries = 10
         for _ in range(max_tries):
             img, success = self.cap.read()
@@ -54,7 +52,6 @@ class Camera:
 
         if success == False:
             raise Exception('Problem reading camera')
-            return
 
         cv2.imwrite('static/jpg/last_{}.jpg'.format(self.src), img)
 
@@ -77,75 +74,83 @@ class Camera:
         db.write_trafo(self.src, h)
 
     def dart_motion_dect(self):
+
+        #try:
         
-        self.stopMotionThread = False
-        self.motionRatio = 0
-
-        print('Waiting for motion')
-        
-        #Parameters
-        t_rep = 0.16 # Take a picure every t_repeat seconds
-        t_max = 0.48 # Maximum time the motion should take time - hereby we can distinguish between dart throw and human
-        min_ratio = 0.002 #Thresholds important - make accessible / dynamic - between 0 and 1
-        max_ratio = 0.03
-
-        #Testing
-        image_before_link = 'static/jpg/before_{}.jpg'.format(self.src)
-        image_after_link = 'static/jpg/after_{}.jpg'.format(self.src)
-
-        
-        while self.stopMotionThread == False:
-
-            # Wait for motion
-            img_before, img_start_motion, _ = self.wait_for_img_diff_within_thresh(min_ratio, np.inf, t_rep)
-
-            # Wait for motion to stop
-            _, img_after, t_motion = self.wait_for_img_diff_within_thresh(0, min_ratio, t_rep, start_image = img_start_motion)
-
-            # Get difference ratio of image befor motion and image after motion
-            ratio_final = Camera.get_img_diff_ratio(img_before,img_after)
+            self.stopDectThread = False
+            self.dartThrow = None
             
-            # Criteria for being a dart:
-            # time of motion, maximum object smaller max treshold, size of final object in thresholds
-            if t_motion < t_max and ratio_final < max_ratio and ratio_final > min_ratio: # ratio_max < max_ratio and
+            #Parameters
+            t_rep = 0.08 # Take a picure every t_repeat seconds
+            t_max = 0.24 # Maximum time the motion should take time - hereby we can distinguish between dart throw and human
+            min_ratio = 0.0002 #Thresholds important - make accessible / dynamic - between 0 and 1
+            max_ratio = 0.035
+            dect_ratio = min_ratio / 10
+
+            #Testing
+            #image_before_link = 'static/jpg/before_{}.jpg'.format(self.src)
+            #image_after_link = 'static/jpg/after_{}.jpg'.format(self.src)
+            
+            while self.stopDectThread == False:
+
+                # Wait for motion
+                img_before, img_start_motion, _ = self.wait_diff_in_bnd(dect_ratio, np.inf, t_rep)
+
+                # Wait for motion to stop
+                _, img_after, t_motion = self.wait_diff_in_bnd(0, dect_ratio, t_rep, start_image = img_start_motion)
+
+                # take img after motion stopped:
+                time.sleep(t_rep)
+                img_after, _ = self.cap.read()
+
+                # Get difference ratio of image befor motion and image after motion
+                ratio_final = Camera.get_img_diff_ratio(img_before,img_after)
                 
-                #Testing
-                #cv2.imwrite(image_before_link, img_before)
-                #cv2.imwrite(image_after_link, img_after)
-                #global img_count
-                #dbx.img_upload(image_before_link,'/Images/Session_2020_30_12/before_{}_{}.jpg'.format(self.src, img_count))
-                #dbx.img_upload(image_after_link,'/Images/Session_2020_30_12/after_{}_{}.jpg'.format(self.src, img_count))
-                #img_count = img_count + 1
+                # Criteria for being a dart:
+                # time of motion, maximum object smaller max treshold, size of final object in thresholds
+                if t_motion < t_max and ratio_final < max_ratio and ratio_final > min_ratio: # ratio_max < max_ratio and
+                    #dart detected
+                    
+                    #Testing
+                    #cv2.imwrite(image_before_link, img_before)
+                    #cv2.imwrite(image_after_link, img_after)
+                    #lobal img_count
+                    #cv2.imwrite('static/session_imgs/before_{}_{}.jpg'.format(self.src, img_count),img_before)
+                    #cv2.imwrite('static/session_imgs/after_{}_{}.jpg'.format(self.src, img_count),img_after)
+                    #dbx.img_upload(image_before_link,'/Images/Session_2021_01_18/before_{}_{}.jpg'.format(self.src, img_count))
+                    #dbx.img_upload(image_after_link,'/Images/Session_2021_01_18/after_{}_{}.jpg'.format(self.src, img_count))
+                    #img_count = img_count + 1
 
-                self.dartThrow = dartThrowClass.dartThrow(img_before,img_after, self.src)
-                self.motionRatio = ratio_final
-                self.stopMotionThread = True
-                return
-            else:
-                self.stopMotionThread = True
-                self.motionRatio = False
-                self.dartThrow = None
-                return
+                    self.dartThrow = dartThrowClass.dartThrow(img_before,img_after, self.src)
+                    self.is_hand_motion = False
+                    self.stopDectThread = True
+                    return
 
-    def wait_for_img_diff_within_thresh(self,min_ratio,max_ratio,t_rep, start_image = None):
+                elif t_motion > t_max or ratio_final > max_ratio:
+                    #hand detected
+                    self.stopDectThread = True
+                    self.is_hand_motion = True
+                    return
+
+        #except:
+        #    self.stopDectThread = True
+        #    self.is_hand_motion = False
+        #    self.dartThrow = None
+        #    return
+
+    def wait_diff_in_bnd(self,min_ratio,max_ratio,t_rep, start_image = None):
         img_diff_ratio = -1
         
         # Intialize while loop
         t = 0
         ratio_max = 0
         if start_image is None:
-            
-            success = False
-            while success is False:
-                img1, success= self.cap.read()
-
+            img1, success= self.cap.read()
             time.sleep(t_rep)
         else:
             img1 = start_image
 
-        success = False
-        while success is False:
-                img2, success = self.cap.read()
+        img2, success = self.cap.read()
 
         img_diff_ratio = Camera.get_img_diff_ratio(img1, img2)
 
@@ -155,9 +160,7 @@ class Camera:
             time.sleep(t_rep)
             img1 = img2.copy()
 
-            success = False
-            while success == False:
-                img2, success = self.cap.read()
+            img2, _ = self.cap.read()
 
             # Get ratio of difference pixels between first and second image
             img_diff_ratio = Camera.get_img_diff_ratio(img1, img2)

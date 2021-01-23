@@ -18,7 +18,7 @@ function repeated_ajax_check() {
         success: function(response){
             var obj = JSON.parse(response)
             document.getElementById("score").innerHTML = obj.score
-            document.getElementById("event").innerHTML = obj.event
+            document.getElementById("nextPlayer").innerHTML = obj.nextPlayer
             document.getElementById("line_detection").src = "static/jpg/line_detection.jpg" + "?" + new Date().getTime();
             
             repeated_ajax_check();
