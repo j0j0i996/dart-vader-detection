@@ -1,8 +1,7 @@
-### Automated dart scoring project using a raspberry pi and opencv
+### Automated dart scoring API using a raspberry pi and opencv
 
 - Dart recognition is built with python3. For image processing openCV is used.
-- Backend of website is built with Flask
-- Frontend is built with HTML, CSS and Javascript
+- API is built with Flask
 
 # Readme.md
 
