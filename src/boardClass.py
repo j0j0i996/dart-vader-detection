@@ -77,6 +77,13 @@ class Board:
         src = self.get_src_points(img, closest_field = closest_field)
         dest = self.get_dest_points()
         h, status = cv2.findHomography(src, dest)
+
+        cv2.imwrite('static/jpg/calibration_{}.jpg'.format(self.src), img)
+        warp_img = cv2.warpPerspective(img, h, (self.std_center[0]*2,self.std_center[1]*2))
+        warp_img = self.draw_board(warp_img)
+
+        cv2.imwrite('static/jpg/calibration_warp_{}.jpg'.format(self.src), warp_img)
+
         self.h = h
     
     def manual_calibration(self):
@@ -124,7 +131,7 @@ class Board:
         # Convention: clockwise start from point between 20 and 1
         fields = [20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5]
         idx = fields.index(closest_field)
-        src_points = np.roll(src_points, -idx, axis=0)
+        src_points = np.roll(src_points, idx, axis=0)
 
         for pt in src_points:
             img = cv2.circle(img, (int(pt[0]),int(pt[1])), 2, 255, 2)
@@ -143,15 +150,16 @@ class Board:
     @classmethod
     def get_dest_points(cls):
         dest_points = np.empty([20,2])
-        r = 107 # Important -> outer edge of triple ring
+        r = 170 # Important -> outer edge of triple ring
         for i in range(20):
             angle = 90 - 180/20 - i * 360 / 20
             dest_points[i] = np.array(cls.pol2cath(r, angle))
         return dest_points
 
     @classmethod
-    def draw_board(cls):
-        img = np.zeros((cls.std_center[0] * 2, cls.std_center[1] * 2))
+    def draw_board(cls , img = None):
+        if img is None:
+            img = np.zeros((cls.std_center[0] * 2, cls.std_center[1] * 2))
         r_list = [16, 99, 107, 162, 170]
         for r in r_list:
             cv2.circle(img, (cls.std_center[0], cls.std_center[1]), r, 255, 1)
@@ -204,7 +212,7 @@ class Board:
 
         if len(line_list) == 10:
             #Sort after angle
-            sorted_lines = [x for _,x in sorted(zip(angles,line_list), reverse = True)] # sort clockwise
+            sorted_lines = [x for _,x in sorted(zip(angles,line_list), reverse = False)] # sort clockwise
             return sorted_lines
         else:
             return None
@@ -261,7 +269,7 @@ class Board:
         # get smallest and third smallest ellipses
         sizes = [x[1][0] * x[1][1] for x in ellipses]
         index = np.argsort(sizes)
-        ellipses = [ellipses[index[0]], ellipses[index[2]]]
+        ellipses = [ellipses[index[0]], ellipses[index[4]]]
         
         return ellipses
 

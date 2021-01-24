@@ -19,7 +19,9 @@ class VideoStream:
         self.stream.set(cv2.CAP_PROP_FOURCC, codec)
         self.width = width
         self.height = height
-        #self.stream.set(cv2.CAP_PROP_EXPOSURE,-8)
+        self.stream.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.75)
+        self.stream.set(cv2.CAP_PROP_EXPOSURE, 50)
+        
         self.stream.set(cv2.CAP_PROP_FPS,15)
         self.rotCode = rotations[int(rot/90)]
         self.update_count = 0
@@ -42,7 +44,7 @@ class VideoStream:
             success, frame = self.stream.read()
             dim = (self.width, self.height)
             frame = cv2.resize(frame, dim, interpolation = cv2.INTER_AREA)
-            cv2.normalize(frame, frame, 0, 220, cv2.NORM_MINMAX)
+            #cv2.normalize(frame, frame, 0, 220, cv2.NORM_MINMAX)
             self.success, self.frame = success, frame
             self.update_count = self.update_count + 1
 
@@ -63,23 +65,3 @@ class VideoStream:
     def stop(self):
         # indicate that the thread should be stopped
         self.running = False
-        
-
-if __name__ == '__main__':
-    cap = VideoStream(src = 0, rot = 180)
-    cap.start()
-    time.sleep(3)
-    for i in range(5):
-        img, success = cap.read()
-        time.sleep(0.1)
-        print(success)
-        cv2.imwrite('test{}.jpg'.format(i), img)
-        
-    time.sleep(0.5)
-    for i in range(6,10):
-        img, success = cap.read()
-        time.sleep(0.1)
-        print(success)
-        cv2.imwrite('test{}.jpg'.format(i), img)
-    cap.stop()
-    
