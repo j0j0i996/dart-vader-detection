@@ -8,7 +8,7 @@ import datetime
 
 class camManager:
         
-    def __init__(self, width = 400, height = 320):
+    def __init__(self, width = 800, height = 600):
 
         self.width = width
         self.height = height
@@ -104,7 +104,9 @@ class camManager:
                 single_pt_list = []
                 line_list = []
                 for item in dect_cams:
-                    single_pt_rel, line_rel = item['cam'].dartThrow.get_pos()
+                    single_pt_rel, line_rel, success = item['cam'].dartThrow.get_pos()
+                    if success == False:
+                        continue
 
                     single_pt_std = item['cam'].board.rel2std(single_pt_rel)
                     single_pt_list.append(single_pt_std)
@@ -114,7 +116,11 @@ class camManager:
 
                 print('{} cams detected a motion'.format(len(dect_cams)))
 
-                if len(dect_cams) == 1:
+                if len(single_pt_list) == 0: 
+                    print('No detection possible')
+                    return False, False, False, False
+
+                if len(single_pt_list) == 1:
                     
                     pos = single_pt_list[0]
                     score, multiplier = cam.board.get_score(pos)
@@ -151,12 +157,12 @@ class camManager:
                     pos = intersect_list[np.argmin(dist_list)]
 
                     #testing
-                    img = cam.board.draw_board()
-                    for line in line_list:
-                        cv2.line(img,(int(line[0][0]),int(line[0][1])), (int(line[1][0]),int(line[1][1])), 255, 2)
+                    #img = cam.board.draw_board()
+                    #for line in line_list:
+                    #    cv2.line(img,(int(line[0][0]),int(line[0][1])), (int(line[1][0]),int(line[1][1])), 255, 2)
                     
-                    cv2.circle(img, (int(pos[0]), int(pos[1])), 3, (255,0,0), 2)
-                    cv2.imwrite('static/jpg/recognition.jpg', img)
+                    #cv2.circle(img, (int(pos[0]), int(pos[1])), 3, (255,0,0), 2)
+                    #cv2.imwrite('static/jpg/recognition.jpg', img)
 
                     score, multiplier = cam.board.get_score(pos)
 

@@ -76,7 +76,6 @@ class Camera:
     def dart_motion_dect(self):
 
         #try:
-        
             self.stopDectThread = False
             self.dartThrow = None
             
