@@ -53,6 +53,8 @@ class Camera:
         if success == False:
             raise Exception('Problem reading camera')
 
+        print(img.shape)
+
         cv2.imwrite('static/jpg/last_{}.jpg'.format(self.src), img)
 
         return img
@@ -83,7 +85,7 @@ class Camera:
             t_rep = 0.08 # Take a picure every t_repeat seconds
             t_max = 0.24 # Maximum time the motion should take time - hereby we can distinguish between dart throw and human
             min_ratio = 0.0002 #Thresholds important - make accessible / dynamic - between 0 and 1
-            max_ratio = 0.035
+            max_ratio = 0.025
             dect_ratio = min_ratio / 10
 
             #Testing

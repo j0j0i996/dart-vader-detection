@@ -20,7 +20,10 @@ class VideoStream:
         self.width = width
         self.height = height
         self.stream.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.75)
-        self.stream.set(cv2.CAP_PROP_EXPOSURE, 50)
+        self.stream.set(cv2.CAP_PROP_EXPOSURE, 15)
+
+        self.stream.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+        self.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
         
         self.stream.set(cv2.CAP_PROP_FPS,15)
         self.rotCode = rotations[int(rot/90)]
@@ -43,7 +46,7 @@ class VideoStream:
         while self.running:
             success, frame = self.stream.read()
             dim = (self.width, self.height)
-            frame = cv2.resize(frame, dim, interpolation = cv2.INTER_AREA)
+            #frame = cv2.resize(frame, dim, interpolation = cv2.INTER_AREA)
             #cv2.normalize(frame, frame, 0, 220, cv2.NORM_MINMAX)
             self.success, self.frame = success, frame
             self.update_count = self.update_count + 1

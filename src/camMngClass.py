@@ -13,7 +13,7 @@ class camManager:
         self.width = width
         self.height = height
         self.src_list = self.get_srcs()
-        #self.src_list = [0, 2, 4]
+        #self.src_list = [4]
         self.cam_list = self.activate_cams()
 
         print(self.src_list)
@@ -133,6 +133,7 @@ class camManager:
                 else:
                     
                     #get two single pts which are closest together
+                    """
                     def dist(pt1, pt2):
                         comparison = pt1 == pt2
                         equal_arrays = comparison.all()
@@ -144,6 +145,8 @@ class camManager:
                     dist_matrix = np.array([np.array([dist(pt1, pt2) for pt1 in single_pt_list]) for pt2 in single_pt_list])
                     ind = np.unravel_index(dist_matrix.argmin(), dist_matrix.shape)
                     single_pt_list = [single_pt_list[i] for i in list(ind)]
+
+                    """
                     
                     
                     #get avg of those single points points

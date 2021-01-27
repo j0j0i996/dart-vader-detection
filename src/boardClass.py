@@ -5,6 +5,7 @@ import json
 class Board:
 
     std_center = [400, 400]
+    pixel_per_mm = 2
 
     def __init__(self, h = None, src = 0):
         self.h = h
@@ -32,7 +33,7 @@ class Board:
 
         x = std_cath_pos[0] - self.std_center[0]
         y = self.std_center[1] - std_cath_pos[1]
-        r = np.sqrt(x**2 + y**2)
+        r = np.sqrt(x**2 + y**2) / self.pixel_per_mm
         phi = np.arctan2(y, x)/(2*np.pi)*360 - 90 + 360/20/2  # 0 degree is intersect between 20 and 1
 
         #arctan is mapping between -180 and 180, but we want an angle between 0 and 360 to simplify later tasks
@@ -98,15 +99,24 @@ class Board:
             src_pts.append(np.array([pt['x'],pt['y']]))
         
         # get destination points
-        dest_pts = [np.array(self.std_center)]
-        r = 170
-        angle_list = [99,81, -9, 279, 261, 171]
-        for phi in angle_list:
-            pt = self.pol2cath(r, phi)
-            dest_pts.append(np.array(self.pol2cath(r, phi)))
+        dest_pts = []
+        r_list = [170]
+        r_list = [x * self.pixel_per_mm for x in r_list]
+
+        angle_list = [81, -9, 261, 171]
+        for r in r_list:
+            for phi in angle_list:
+                pt = self.pol2cath(r, phi)
+                dest_pts.append(np.array(self.pol2cath(r, phi)))
             
         h, status = cv2.findHomography(np.array(src_pts), np.array(dest_pts))
         self.h = h
+
+        #Testing
+        img = cv2.imread('static/jpg/last_{}.jpg'.format(self.src))
+        warp_img = cv2.warpPerspective(img, h, (self.std_center[0]*2,self.std_center[1]*2))
+        warp_img = self.draw_board(warp_img)
+        cv2.imwrite('static/jpg/calibration_warp_{}.jpg'.format(self.src), warp_img)
 
         
 
@@ -150,7 +160,7 @@ class Board:
     @classmethod
     def get_dest_points(cls):
         dest_points = np.empty([20,2])
-        r = 170 # Important -> outer edge of triple ring
+        r = 170 * cls.pixel_per_mm # Important -> outer edge of triple ring
         for i in range(20):
             angle = 90 - 180/20 - i * 360 / 20
             dest_points[i] = np.array(cls.pol2cath(r, angle))
@@ -161,13 +171,14 @@ class Board:
         if img is None:
             img = np.zeros((cls.std_center[0] * 2, cls.std_center[1] * 2))
         r_list = [16, 99, 107, 162, 170]
+        r_list = [x * cls.pixel_per_mm for x in r_list]
         for r in r_list:
-            cv2.circle(img, (cls.std_center[0], cls.std_center[1]), r, 255, 1)
+            cv2.circle(img, (cls.std_center[0], cls.std_center[1]), r, (255, 255, 255), 2)
         
-        r = 170
+        r = 170 * cls.pixel_per_mm
         for phi in range(9,360,18):
             x,y = cls.pol2cath(r, phi)
-            cv2.line(img, (cls.std_center[0], cls.std_center[1]), (int(x),int(y)), 255, 1)
+            cv2.line(img, (cls.std_center[0], cls.std_center[1]), (int(x),int(y)), (255, 255, 255), 1)
 
         return img
 
