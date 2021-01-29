@@ -85,8 +85,8 @@ class Camera:
             t_rep = 0.08 # Take a picure every t_repeat seconds
             t_max = 0.24 # Maximum time the motion should take time - hereby we can distinguish between dart throw and human
             min_ratio = 0.0002 #Thresholds important - make accessible / dynamic - between 0 and 1
-            max_ratio = 0.025
-            dect_ratio = min_ratio / 10
+            max_ratio = 0.05
+            dect_ratio = min_ratio
 
             #Testing
             #image_before_link = 'static/jpg/before_{}.jpg'.format(self.src)
@@ -118,8 +118,6 @@ class Camera:
                     #lobal img_count
                     #cv2.imwrite('static/session_imgs/before_{}_{}.jpg'.format(self.src, img_count),img_before)
                     #cv2.imwrite('static/session_imgs/after_{}_{}.jpg'.format(self.src, img_count),img_after)
-                    #dbx.img_upload(image_before_link,'/Images/Session_2021_01_18/before_{}_{}.jpg'.format(self.src, img_count))
-                    #dbx.img_upload(image_after_link,'/Images/Session_2021_01_18/after_{}_{}.jpg'.format(self.src, img_count))
                     #img_count = img_count + 1
 
                     self.dartThrow = dartThrowClass.dartThrow(img_before,img_after, self.src)
@@ -146,12 +144,12 @@ class Camera:
         t = 0
         ratio_max = 0
         if start_image is None:
-            img1, success= self.cap.read()
+            img1, _ = self.cap.read()
             time.sleep(t_rep)
         else:
             img1 = start_image
 
-        img2, success = self.cap.read()
+        img2, _ = self.cap.read()
 
         img_diff_ratio = Camera.get_img_diff_ratio(img1, img2)
 
@@ -165,17 +163,22 @@ class Camera:
 
             # Get ratio of difference pixels between first and second image
             img_diff_ratio = Camera.get_img_diff_ratio(img1, img2)
+        
+        print(img_diff_ratio)
 
         return img1, img2, t
 
     @staticmethod
     def get_img_diff_ratio(img1, img2):
 
+        dim = (320, 240)
+        img1 = cv2.resize(img1, dim)
+        img2 = cv2.resize(img2, dim)
+
         diff = cv2.absdiff(img2,img1)
         diff = cv2.cvtColor(diff,cv2.COLOR_BGR2GRAY)
 
-        diff = cv2.GaussianBlur(diff, (5, 5), 0)
-        #blur = cv2.bilateralFilter(blur, 9, 75, 75)
+        #diff = cv2.GaussianBlur(diff, (5, 5), 0)
         _, thresh = cv2.threshold(diff, 60, 255, 0)
 
         white_pixels = cv2.countNonZero(thresh)
@@ -183,4 +186,25 @@ class Camera:
         ratio = white_pixels/total_pixels
 
         return ratio
+
+
+if __name__ == '__main__':
+    import datetime
+    img1 = cv2.imread('../static/jpg/last_0.jpg')
+    img2 = cv2.imread('../static/jpg/last_2.jpg')
+
+    dim = (320, 240)
+    img1 = cv2.resize(img1, dim)
+    cv2.imwrite('../static/jpg/small_0.jpg', img1)
+
+    t1 = datetime.datetime.now()
+
+    img2 = cv2.resize(img2, dim)
+
+    ratio = Camera.get_img_diff_ratio(img1, img2)
+
+    t2 = datetime.datetime.now()
+
+    print(ratio)
+    print('img diff time: {}'.format(t2-t1))
 
