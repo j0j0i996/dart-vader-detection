@@ -30,6 +30,8 @@ class dartThrow:
         # Get binary image
         #ret, binary_img = cv2.threshold(diffBlur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
         ret, binary_img = cv2.threshold(diffBlur, 16,255,cv2.THRESH_BINARY)
+        kernel = np.ones((3,3),np.float32)
+        binary_img = cv2.morphologyEx(binary_img, cv2.MORPH_CLOSE, kernel)
 
         box_x0, box_y0, box_w, box_h = self.get_bnd_rect(binary_img)
 
@@ -51,7 +53,7 @@ class dartThrow:
                 done = True
 
         #lines = cv2.HoughLines(skel,1,np.pi/180, int(h*0.5))
-        lines = cv2.HoughLinesP(skel,  1, 1*np.pi/180, 15, minLineLength=int(box_h*0.4), maxLineGap=int(box_h*0.3))
+        lines = cv2.HoughLinesP(skel,  1, 1*np.pi/180, 30, minLineLength=int(box_h*0.4), maxLineGap=int(box_h*0.2))
 
         try:
             x1, y1, x2, y2 = lines[0][0]
@@ -84,7 +86,7 @@ class dartThrow:
         """
 
         t2 = datetime.datetime.now()
-        print('Cam {}: Recognition time: {}'.format(self.src, t2-t1))
+        #print('Cam {}: Recognition time: {}'.format(self.src, t2-t1))
 
         return single_pt, line_pts, True
 
@@ -93,7 +95,7 @@ class dartThrow:
 
         height, width = binary_img.shape[:2]
 
-        min_size = height * 0.2
+        min_size = height * 0.04 * width * 0.04
 
         # Get contours
         contours, hierarchy = cv2.findContours(binary_img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)

@@ -6,9 +6,6 @@ import src.boardClass as boardClass
 import src.dartThrowClass as dartThrowClass
 import src.videoCapture as videoCapture
 import src.db_handler as db
-
-img_count = 0
-
 class Camera:
         
     def __init__(self, src, width, height, rot = 0):
@@ -27,6 +24,9 @@ class Camera:
         self.dartThrow = None
         self.stop_dect_tread = False
         self.is_hand_motion = False
+
+        #testing
+        self.img_count = 7
 
     def start(self):
         self.cap.start()
@@ -73,67 +73,58 @@ class Camera:
 
     def dart_motion_dect(self):
 
-        #try:
-            self.stop_dect_thread = False
-            self.dartThrow = None
+        self.stop_dect_thread = False
+        self.dartThrow = None
+        
+        #Parameter
+        T_MAX = 0.6 # Maximum time the motion should take time
+        T_VIB = 0.05 # potential vibration time
+        MIN_RATIO = 0.001 #Thresholds important - make accessible / dynamic - between 0 and 1
+        MAX_RATIO = 0.035
+        DECT_RATIO = MIN_RATIO / 5
+        
+        while self.stop_dect_thread == False:
+
+            # Wait for motion
+            img_before, img_start_motion = self.wait_diff_in_bnd(DECT_RATIO, np.inf)
+
+            t1 = datetime.datetime.now()
+            # Wait for motion to stop
+            _, img_after = self.wait_diff_in_bnd(0, DECT_RATIO, start_image = img_start_motion)
+
+            t2 = datetime.datetime.now()
+            t_motion = (t2-t1).total_seconds()
+
+            time.sleep(T_VIB)
+
+            # take img after motion stopped:
+            img_after, _ = self.cap.read()
+
+            # Get difference ratio of image befor motion and image after motion
+            ratio_final = Camera.get_img_diff_ratio(img_before,img_after)
+            #print("Ratio cam {} = {}".format(self.src,ratio_final))
             
-            #Parameter
-            T_MAX = 0.7 # Maximum time the motion should take time - hereby we can distinguish between dart throw and human
-            MIN_RATIO = 0.002 #Thresholds important - make accessible / dynamic - between 0 and 1
-            MAX_RATIO = 0.05
-            DECT_RATIO = MIN_RATIO
-
-            #Testing
-            #image_before_link = 'static/jpg/before_{}.jpg'.format(self.src)
-            #image_after_link = 'static/jpg/after_{}.jpg'.format(self.src)
-            
-            while self.stop_dect_thread == False:
-
-                # Wait for motion
-                img_before, img_start_motion = self.wait_diff_in_bnd(DECT_RATIO, np.inf)
-
-                t1 = datetime.datetime.now()
-                # Wait for motion to stop
-                _, img_after = self.wait_diff_in_bnd(0, DECT_RATIO, start_image = img_start_motion)
-
-                t2 = datetime.datetime.now()
-                t_motion = (t2-t1).total_seconds()
-                print("motion time = {} ".format(t_motion))
-
-                # take img after motion stopped:
-                img_after, _ = self.cap.read()
-
-                # Get difference ratio of image befor motion and image after motion
-                ratio_final = Camera.get_img_diff_ratio(img_before,img_after)
+            # Criteria for being a dart:
+            if t_motion < T_MAX and ratio_final < MAX_RATIO and ratio_final > MIN_RATIO:
+                #dart detected
                 
-                # Criteria for being a dart:
-                if t_motion < T_MAX and ratio_final < MAX_RATIO and ratio_final > MIN_RATIO:
-                    #dart detected
-                    
-                    #Testing
-                    #cv2.imwrite(image_before_link, img_before)
-                    #cv2.imwrite(image_after_link, img_after)
-                    #lobal img_count
-                    #cv2.imwrite('static/session_imgs/before_{}_{}.jpg'.format(self.src, img_count),img_before)
-                    #cv2.imwrite('static/session_imgs/after_{}_{}.jpg'.format(self.src, img_count),img_after)
-                    #img_count = img_count + 1
+                #Testing
+                #cv2.imwrite('static/jpg/before_{}.jpg'.format(self.src), img_before)
+                #cv2.imwrite('static/jpg/after_{}.jpg'.format(self.src), img_after)
+                #cv2.imwrite('static/session_imgs/before_{}_{}.jpg'.format(self.src, self.img_count),img_before)
+                #cv2.imwrite('static/session_imgs/after_{}_{}.jpg'.format(self.src, self.img_count),img_after)
+                #self.img_count = self.img_count + 1
 
-                    self.dartThrow = dartThrowClass.dartThrow(img_before,img_after, self.src)
-                    self.is_hand_motion = False
-                    self.stop_dect_thread = True
-                    return
+                self.dartThrow = dartThrowClass.dartThrow(img_before,img_after, self.src)
+                self.is_hand_motion = False
+                self.stop_dect_thread = True
+                return
 
-                elif t_motion > T_MAX or ratio_final > MAX_RATIO:
-                    #hand detected
-                    self.stop_dect_thread = True
-                    self.is_hand_motion = True
-                    return
-
-        #except:
-        #    self.stop_dect_thread = True
-        #    self.is_hand_motion = False
-        #    self.dartThrow = None
-        #    return
+            elif t_motion > T_MAX or ratio_final > MAX_RATIO:
+                #hand detected
+                self.stop_dect_thread = True
+                self.is_hand_motion = True
+                return
 
     def wait_diff_in_bnd(self,MIN_RATIO,MAX_RATIO, start_image = None):
         img_diff_ratio = -1
@@ -153,15 +144,13 @@ class Camera:
             img2, _ = self.cap.read()
 
             img_diff_ratio = Camera.get_img_diff_ratio(img1, img2)
-    
-        print("Diff ratio = {} ".format(round(img_diff_ratio, 5)))
 
         return img1, img2
 
     @staticmethod
     def get_img_diff_ratio(img1, img2):
 
-        DIM = (320, 240)
+        DIM = (240, 180)
         img1 = cv2.resize(img1, DIM)
         img2 = cv2.resize(img2, DIM)
 
@@ -182,7 +171,7 @@ if __name__ == '__main__':
     img1 = cv2.imread('../static/jpg/last_0.jpg')
     img2 = cv2.imread('../static/jpg/last_2.jpg')
 
-    dim = (320, 240)
+    dim = (240, 180)
     img1 = cv2.resize(img1, dim)
     cv2.imwrite('../static/jpg/small_0.jpg', img1)
 

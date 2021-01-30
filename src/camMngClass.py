@@ -88,7 +88,7 @@ class camManager:
         t0 = datetime.datetime.now()
         t_now = datetime.datetime.now()
 
-        T_MAX = 0.3 #treshold
+        T_MAX = 0.4 #treshold
         while (t_now-t0).total_seconds() < T_MAX and len(dect_cams) < len(self.cam_list):
             for i in undetected_indx:
                 cam = self.cam_list[i]
@@ -106,7 +106,7 @@ class camManager:
             cam.stop_dect_thread = True
 
         if next_player:
-            time.sleep(2)
+            time.sleep(1)
             score = False
             multiplier = False
             pos = None
