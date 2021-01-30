@@ -1,15 +1,12 @@
-from datetime import datetime
-import numpy as np
+import datetime
 import cv2
 import time
-from datetime import datetime
+import numpy as np
 import src.boardClass as boardClass
 import src.dartThrowClass as dartThrowClass
 import src.videoCapture as videoCapture
 import src.db_handler as db
 import src.dropbox_integration as dbx
-import sqlite3 
-import json
 
 img_count = 0
 
@@ -82,9 +79,9 @@ class Camera:
             self.dartThrow = None
             
             #Parameters
-            t_rep = 0.08 # Take a picure every t_repeat seconds
-            t_max = 0.24 # Maximum time the motion should take time - hereby we can distinguish between dart throw and human
-            min_ratio = 0.0002 #Thresholds important - make accessible / dynamic - between 0 and 1
+            t_sleep = 0 # Take a picure every t_sleep at seconds
+            t_max = 0.7 # Maximum time the motion should take time - hereby we can distinguish between dart throw and human
+            min_ratio = 0.002 #Thresholds important - make accessible / dynamic - between 0 and 1
             max_ratio = 0.05
             dect_ratio = min_ratio
 
@@ -95,13 +92,18 @@ class Camera:
             while self.stopDectThread == False:
 
                 # Wait for motion
-                img_before, img_start_motion, _ = self.wait_diff_in_bnd(dect_ratio, np.inf, t_rep)
+                img_before, img_start_motion = self.wait_diff_in_bnd(dect_ratio, np.inf, t_sleep)
 
+                t1 = datetime.datetime.now()
                 # Wait for motion to stop
-                _, img_after, t_motion = self.wait_diff_in_bnd(0, dect_ratio, t_rep, start_image = img_start_motion)
+                _, img_after = self.wait_diff_in_bnd(0, dect_ratio, t_sleep, start_image = img_start_motion)
+
+                t2 = datetime.datetime.now()
+                t_motion = (t2-t1).total_seconds()
+                print("Motion time = {} ".format(t_motion))
 
                 # take img after motion stopped:
-                time.sleep(t_rep)
+                time.sleep(t_sleep)
                 img_after, _ = self.cap.read()
 
                 # Get difference ratio of image befor motion and image after motion
@@ -137,36 +139,30 @@ class Camera:
         #    self.dartThrow = None
         #    return
 
-    def wait_diff_in_bnd(self,min_ratio,max_ratio,t_rep, start_image = None):
+    def wait_diff_in_bnd(self,min_ratio,max_ratio,t_sleep, start_image = None):
         img_diff_ratio = -1
         
-        # Intialize while loop
-        t = 0
-        ratio_max = 0
         if start_image is None:
             img1, _ = self.cap.read()
-            time.sleep(t_rep)
+            time.sleep(t_sleep)
         else:
             img1 = start_image
 
         img2, _ = self.cap.read()
-
         img_diff_ratio = Camera.get_img_diff_ratio(img1, img2)
 
         while img_diff_ratio < min_ratio or img_diff_ratio > max_ratio:
             
-            t = t + t_rep
-            time.sleep(t_rep)
+            time.sleep(t_sleep)
             img1 = img2.copy()
 
             img2, _ = self.cap.read()
 
-            # Get ratio of difference pixels between first and second image
             img_diff_ratio = Camera.get_img_diff_ratio(img1, img2)
-        
-        print(img_diff_ratio)
+    
+        print("Diff ratio = {} ".format(round(img_diff_ratio, 5)))
 
-        return img1, img2, t
+        return img1, img2
 
     @staticmethod
     def get_img_diff_ratio(img1, img2):
@@ -189,7 +185,6 @@ class Camera:
 
 
 if __name__ == '__main__':
-    import datetime
     img1 = cv2.imread('../static/jpg/last_0.jpg')
     img2 = cv2.imread('../static/jpg/last_2.jpg')
 

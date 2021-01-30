@@ -24,7 +24,7 @@ class VideoStream:
         self.stream.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
         self.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
         
-        self.stream.set(cv2.CAP_PROP_FPS,15)
+        self.stream.set(cv2.CAP_PROP_FPS, 15)
         self.rotCode = rotations[int(rot/90)]
 
         self.update_count = 0
