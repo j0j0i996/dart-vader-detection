@@ -14,9 +14,7 @@ class VideoStream:
         except:
             print("Not able to open camera {}".format(src))
 
-        #codec = 0x47504A4D
         codec = cv2.VideoWriter_fourcc( 'M', 'J', 'P', 'G'    )
-        print(codec)
         self.stream.set(cv2.CAP_PROP_FOURCC, codec)
         self.width = width
         self.height = height
@@ -40,14 +38,12 @@ class VideoStream:
         self.t = Thread(target=self.update, args=()).start()
 
     def update(self):
-
         while self.running:
             success, frame = self.stream.read()
             self.success, self.frame = success, frame
             self.update_count = self.update_count + 1
 
     def read(self):
-
         frame, success = self.frame, self.success
         while True:
             frame, success = self.frame, self.success
