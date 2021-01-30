@@ -21,7 +21,7 @@ def index():
 
 @app.route('/wait_throw')
 def get_score():
-    score, multiplier, nextPlayer, success = cam_manager.detection()
+    score, multiplier, nextPlayer = cam_manager.detection()
     return json.dumps({'score': score, 'multiplier': multiplier, 'nextPlayer': nextPlayer})
 
 if __name__ == '__main__':
@@ -37,8 +37,11 @@ if __name__ == '__main__':
     #cam_manager.cam_list[2].calibrate_board(2) 
 
     while True:
-        cam_manager.detection()
-
+        try:
+            cam_manager.detection()
+        except Exception as ex:
+            print(ex)
+            
     #app.run(host='0.0.0.0', port='8090') #, debug=True
 
 
