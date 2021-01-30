@@ -6,7 +6,6 @@ import src.boardClass as boardClass
 import src.dartThrowClass as dartThrowClass
 import src.videoCapture as videoCapture
 import src.db_handler as db
-import src.dropbox_integration as dbx
 
 img_count = 0
 
@@ -26,7 +25,7 @@ class Camera:
             self.board = boardClass.Board(src = self.src)
 
         self.dartThrow = None
-        self.stopDectThread = False
+        self.stop_dect_tread = False
         self.is_hand_motion = False
 
     def start(self):
@@ -75,41 +74,40 @@ class Camera:
     def dart_motion_dect(self):
 
         #try:
-            self.stopDectThread = False
+            self.stop_dect_thread = False
             self.dartThrow = None
             
-            #Parameters
-            t_sleep = 0 # Take a picure every t_sleep at seconds
-            t_max = 0.7 # Maximum time the motion should take time - hereby we can distinguish between dart throw and human
-            min_ratio = 0.002 #Thresholds important - make accessible / dynamic - between 0 and 1
-            max_ratio = 0.05
-            dect_ratio = min_ratio
+            #Parameter
+            T_MAX = 0.7 # Maximum time the motion should take time - hereby we can distinguish between dart throw and human
+            MIN_RATIO = 0.002 #Thresholds important - make accessible / dynamic - between 0 and 1
+            MAX_RATIO = 0.05
+            DECT_RATIO = MIN_RATIO
 
             #Testing
             #image_before_link = 'static/jpg/before_{}.jpg'.format(self.src)
             #image_after_link = 'static/jpg/after_{}.jpg'.format(self.src)
             
-            while self.stopDectThread == False:
+            while self.stop_dect_thread == False:
 
                 # Wait for motion
-                img_before, img_start_motion = self.wait_diff_in_bnd(dect_ratio, np.inf, t_sleep)
+                img_before, img_start_motion = self.wait_diff_in_bnd(DECT_RATIO, np.inf)
 
                 t1 = datetime.datetime.now()
                 # Wait for motion to stop
-                _, img_after = self.wait_diff_in_bnd(0, dect_ratio, t_sleep, start_image = img_start_motion)
+                _, img_after = self.wait_diff_in_bnd(0, DECT_RATIO, start_image = img_start_motion)
 
                 t2 = datetime.datetime.now()
                 t_motion = (t2-t1).total_seconds()
+                print("motion time = {} ".format(t_motion))
 
                 # take img after motion stopped:
-                time.sleep(t_sleep)
                 img_after, _ = self.cap.read()
 
                 # Get difference ratio of image befor motion and image after motion
                 ratio_final = Camera.get_img_diff_ratio(img_before,img_after)
                 
                 # Criteria for being a dart:
-                if t_motion < t_max and ratio_final < max_ratio and ratio_final > min_ratio:
+                if t_motion < T_MAX and ratio_final < MAX_RATIO and ratio_final > MIN_RATIO:
                     #dart detected
                     
                     #Testing
@@ -122,36 +120,34 @@ class Camera:
 
                     self.dartThrow = dartThrowClass.dartThrow(img_before,img_after, self.src)
                     self.is_hand_motion = False
-                    self.stopDectThread = True
+                    self.stop_dect_thread = True
                     return
 
-                elif t_motion > t_max or ratio_final > max_ratio:
+                elif t_motion > T_MAX or ratio_final > MAX_RATIO:
                     #hand detected
-                    self.stopDectThread = True
+                    self.stop_dect_thread = True
                     self.is_hand_motion = True
                     return
 
         #except:
-        #    self.stopDectThread = True
+        #    self.stop_dect_thread = True
         #    self.is_hand_motion = False
         #    self.dartThrow = None
         #    return
 
-    def wait_diff_in_bnd(self,min_ratio,max_ratio,t_sleep, start_image = None):
+    def wait_diff_in_bnd(self,MIN_RATIO,MAX_RATIO, start_image = None):
         img_diff_ratio = -1
         
         if start_image is None:
             img1, _ = self.cap.read()
-            time.sleep(t_sleep)
         else:
             img1 = start_image
 
         img2, _ = self.cap.read()
         img_diff_ratio = Camera.get_img_diff_ratio(img1, img2)
 
-        while img_diff_ratio < min_ratio or img_diff_ratio > max_ratio:
+        while img_diff_ratio < MIN_RATIO or img_diff_ratio > MAX_RATIO:
             
-            time.sleep(t_sleep)
             img1 = img2.copy()
 
             img2, _ = self.cap.read()
@@ -165,9 +161,9 @@ class Camera:
     @staticmethod
     def get_img_diff_ratio(img1, img2):
 
-        dim = (320, 240)
-        img1 = cv2.resize(img1, dim)
-        img2 = cv2.resize(img2, dim)
+        DIM = (320, 240)
+        img1 = cv2.resize(img1, DIM)
+        img2 = cv2.resize(img2, DIM)
 
         diff = cv2.absdiff(img2,img1)
         diff = cv2.cvtColor(diff,cv2.COLOR_BGR2GRAY)

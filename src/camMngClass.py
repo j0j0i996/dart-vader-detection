@@ -23,12 +23,12 @@ class camManager:
     @staticmethod
     def get_srcs():
         
-        max_tries = 3
+        MAX_TRIES = 3
         src_list = []
 
         for src in range(9):
             cap=cv2.VideoCapture(src)
-            for _ in range(max_tries):
+            for _ in range(MAX_TRIES):
                 if cap.read()[0] is True:
                     src_list.append(src)
                     break
@@ -74,11 +74,10 @@ class camManager:
         undetected_indx = list(range(len(self.cam_list)))
         dect_cams = []
         next_player  = False
-
         while motion is False:
             for i in undetected_indx:
                 cam = self.cam_list[i]
-                if cam.stopDectThread:
+                if cam.stop_dect_thread:
                     motion = True
                     undetected_indx.remove(i)
                     dect_cams.append({'cam':cam, 'src':cam.src, 'single_pt': None, 'line_pts': None})
@@ -89,11 +88,11 @@ class camManager:
         t0 = datetime.datetime.now()
         t_now = datetime.datetime.now()
 
-        T_MAX = 0.3
+        T_MAX = 0.3 #treshold
         while (t_now-t0).total_seconds() < T_MAX and len(dect_cams) < len(self.cam_list):
             for i in undetected_indx:
                 cam = self.cam_list[i]
-                if cam.stopDectThread:
+                if cam.stop_dect_thread:
                     undetected_indx.remove(i)
                     dect_cams.append({'cam':cam, 'src':cam.src, 'single_pt': None, 'line_pts': None})
 
@@ -104,7 +103,7 @@ class camManager:
 
         # Make sure all threads are closed
         for cam in self.cam_list:
-            cam.stopDectThread = True
+            cam.stop_dect_thread = True
 
         if next_player:
             time.sleep(2)
@@ -144,8 +143,8 @@ class camManager:
 
             else:
                 
-                #get two single pts which are closest together
                 """
+                #get two single pts which are closest together
                 def dist(pt1, pt2):
                     comparison = pt1 == pt2
                     equal_arrays = comparison.all()
@@ -160,8 +159,7 @@ class camManager:
 
                 """
                 
-                
-                #get avg of those single points points
+                #get avg of single points
                 avg_single_pt = np.mean(single_pt_list, axis = 0)
 
                 # get interesection points of lines
@@ -175,7 +173,6 @@ class camManager:
                 #img = cam.board.draw_board()
                 #for line in line_list:
                 #    cv2.line(img,(int(line[0][0]),int(line[0][1])), (int(line[1][0]),int(line[1][1])), 255, 2)
-                
                 #cv2.circle(img, (int(pos[0]), int(pos[1])), 3, (255,0,0), 2
                 #cv2.imwrite('static/jpg/recognition.jpg', img)
 
