@@ -122,6 +122,7 @@ class Camera:
 
             elif t_motion > T_MAX or ratio_final > MAX_RATIO:
                 #hand detected
+                print("Hand detected. Cam: {} T: {} Ratio: {}".format(self.src, t_motion, ratio_final))
                 self.stop_dect_thread = True
                 self.is_hand_motion = True
                 return
@@ -138,11 +139,8 @@ class Camera:
         img_diff_ratio = Camera.get_img_diff_ratio(img1, img2)
 
         while img_diff_ratio < MIN_RATIO or img_diff_ratio > MAX_RATIO:
-            
             img1 = img2.copy()
-
             img2, _ = self.cap.read()
-
             img_diff_ratio = Camera.get_img_diff_ratio(img1, img2)
 
         return img1, img2

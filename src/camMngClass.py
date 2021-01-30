@@ -6,6 +6,7 @@ import time
 import numpy as np
 import time
 import datetime
+import sys
 
 class camManager:
         
@@ -45,7 +46,7 @@ class camManager:
     def start_cams(self):
         for cam in self.cam_list:
             cam.start()
-        time.sleep(5)
+        time.sleep(3)
 
     def stop_cams(self):
         for cam in self.cam_list:
@@ -115,8 +116,13 @@ class camManager:
             single_pt_list = []
             line_list = []
             for item in dect_cams:
-                single_pt_rel, line_rel, success = item['cam'].dartThrow.get_pos()
-                if success == False:
+                try:
+                    single_pt_rel, line_rel = item['cam'].dartThrow.get_pos()
+                except Exception as ex:
+                    print(ex)
+                    continue
+                except:
+                    print("Unexpected error:", sys.exc_info()[0])
                     continue
 
                 single_pt_std = item['cam'].board.rel2std(single_pt_rel)
@@ -128,8 +134,7 @@ class camManager:
             print('{} cams detected a motion'.format(len(dect_cams)))
 
             if len(single_pt_list) == 0: 
-                print('No detection possible')
-                return False, False, False, False
+                raise Exception('Not able to find dart')
 
             if len(single_pt_list) == 1:
                 
@@ -163,7 +168,17 @@ class camManager:
                 avg_single_pt = np.mean(single_pt_list, axis = 0)
 
                 # get interesection points of lines
-                intersect_list = [self.line_intersection(line_list[i],line_list[j]) for i in range(len(line_list)) for j in range(len(line_list)) if i < j]
+                intersect_list = []
+                for i in range(len(line_list)):
+                    for j in range(len(line_list)):
+                        if i < j: 
+                            try:
+                                intersect = self.line_intersection(line_list[i],line_list[j])
+                            except Exception as ex:
+                                print(ex)
+                                continue
+
+                            intersect_list.append(intersect)
 
                 # take intesect which is closest to avg_single_pt as dart tip pos
                 dist_list = [np.linalg.norm(pt-avg_single_pt) for pt in intersect_list]
@@ -181,8 +196,7 @@ class camManager:
         t1 = datetime.datetime.now()
 
         print('Total recognition time: {}'.format(t1-t0))
-        success = True
-        return score, multiplier, next_player, success
+        return score, multiplier, next_player
 
     @staticmethod
     def line_intersection(line1, line2):
@@ -194,7 +208,7 @@ class camManager:
 
         div = det(xdiff, ydiff)
         if div == 0:
-            raise Exception('lines do not intersect')
+            raise Exception('Lines do not intersect')
 
         d = (det(*line1), det(*line2))
         x = det(d, xdiff) / div

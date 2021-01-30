@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import datetime
+import sys
 
 class dartThrow:
 
@@ -11,6 +12,7 @@ class dartThrow:
 
     def get_pos(self):
 
+        success = True
         t1 = datetime.datetime.now()
 
         imgBf = self.img_before
@@ -33,8 +35,10 @@ class dartThrow:
         kernel = np.ones((3,3),np.float32)
         binary_img = cv2.morphologyEx(binary_img, cv2.MORPH_CLOSE, kernel)
 
-        box_x0, box_y0, box_w, box_h = self.get_bnd_rect(binary_img)
+        bnd_rect = self.get_bnd_rect(binary_img)
 
+        box_x0, box_y0, box_w, box_h = bnd_rect
+        
         # Skeltonize image
         img = binary_img[box_y0:box_y0 + box_h, box_x0:box_x0 + box_w]
         size = np.size(img)
@@ -55,16 +59,19 @@ class dartThrow:
         #lines = cv2.HoughLines(skel,1,np.pi/180, int(h*0.5))
         lines = cv2.HoughLinesP(skel,  1, 1*np.pi/180, 30, minLineLength=int(box_h*0.4), maxLineGap=int(box_h*0.2))
 
-        try:
-            x1, y1, x2, y2 = lines[0][0]
-        except: 
-            print('Cam {} did not find dart line'.format(self.src))
-            return False, False, False
+        if lines is None:
+            raise Exception('Info: Cam {} did not find dart line \n'.format(self.src), sys.exc_info()[0])
+        
+        x1, y1, x2, y2 = lines[0][0]
 
         vy_temp = y2 - y1
         vx_temp = x2 - x1
         vy = vy_temp / (np.sqrt(vy_temp**2 + vx_temp**2))
         vx = vx_temp / (np.sqrt(vy_temp**2 + vx_temp**2))
+
+        if vy == 0:
+            raise Exception('Info: Cam {}: No line returned as vy == 0 causes division by 0 \n'.format(self.src), sys.exc_info()[0])
+
         x0 = x1 + box_x0
         y0 = y1 + box_y0
         top_x = float((-y0 * vx / vy) + x0)
@@ -88,10 +95,9 @@ class dartThrow:
         t2 = datetime.datetime.now()
         #print('Cam {}: Recognition time: {}'.format(self.src, t2-t1))
 
-        return single_pt, line_pts, True
+        return single_pt, line_pts
 
-    @staticmethod
-    def get_bnd_rect(binary_img):
+    def get_bnd_rect(self, binary_img):
 
         height, width = binary_img.shape[:2]
 
@@ -109,6 +115,9 @@ class dartThrow:
                 else:
                     cnt_pts = np.concatenate((cnt_pts,cnt), axis=0)
         
+        if cnt_pts is None:
+            raise Exception("Info: Cam {} not able to find bounding box \n".format(self.src), sys.exc_info()[0])
+
         # Create bounding box
         bnd_rect = cv2.boundingRect(cnt_pts)
         
@@ -117,6 +126,7 @@ class dartThrow:
         x, y, w, h = bnd_rect
         cv2.rectangle(img,(x,y),(x+w,y+h),(0,255,0),2)
 
+        success = True
         return bnd_rect
 
 if __name__ == '__main__':
