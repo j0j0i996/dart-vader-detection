@@ -100,7 +100,6 @@ class Camera:
 
                 t2 = datetime.datetime.now()
                 t_motion = (t2-t1).total_seconds()
-                print("Motion time = {} ".format(t_motion))
 
                 # take img after motion stopped:
                 time.sleep(t_sleep)
@@ -110,8 +109,7 @@ class Camera:
                 ratio_final = Camera.get_img_diff_ratio(img_before,img_after)
                 
                 # Criteria for being a dart:
-                # time of motion, maximum object smaller max treshold, size of final object in thresholds
-                if t_motion < t_max and ratio_final < max_ratio and ratio_final > min_ratio: # ratio_max < max_ratio and
+                if t_motion < t_max and ratio_final < max_ratio and ratio_final > min_ratio:
                     #dart detected
                     
                     #Testing

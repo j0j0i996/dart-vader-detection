@@ -11,10 +11,11 @@ class Board:
         self.h = h
         self.src = src
 
-    def get_score(self, std_pos):
+    @classmethod
+    def get_score(cls, std_pos):
 
-            std_polar_pos = self.carth2pol(std_pos)
-            score, multiplier = self.pol2score(std_polar_pos)
+            std_polar_pos = cls.carth2pol(std_pos)
+            score, multiplier = cls.pol2score(std_polar_pos)
             return score, multiplier
 
     def rel2std(self, pos_src):
@@ -29,11 +30,12 @@ class Board:
 
         return pos_dest
 
-    def carth2pol(self, std_cath_pos):
+    @classmethod
+    def carth2pol(cls, std_cath_pos):
 
-        x = std_cath_pos[0] - self.std_center[0]
-        y = self.std_center[1] - std_cath_pos[1]
-        r = np.sqrt(x**2 + y**2) / self.pixel_per_mm
+        x = std_cath_pos[0] - cls.std_center[0]
+        y = cls.std_center[1] - std_cath_pos[1]
+        r = np.sqrt(x**2 + y**2) / cls.pixel_per_mm
         phi = np.arctan2(y, x)/(2*np.pi)*360 - 90 + 360/20/2  # 0 degree is intersect between 20 and 1
 
         #arctan is mapping between -180 and 180, but we want an angle between 0 and 360 to simplify later tasks
@@ -41,7 +43,8 @@ class Board:
 
         return [r,phi]
 
-    def pol2score(self, std_polar_pos):
+    @staticmethod
+    def pol2score(std_polar_pos):
 
         # possible single scores of the dartboard, starting from 6 (phi = 0 for polar coordinate)
         fields = [20,5,12,9,14,11,8,16,7,19,3,17,2,15,10,6,13,4,18,1]
