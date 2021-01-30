@@ -50,32 +50,28 @@ class Board:
         fields = [20,5,12,9,14,11,8,16,7,19,3,17,2,15,10,6,13,4,18,1]
 
         # map angle to single score
-        single_score = fields[int(std_polar_pos[1]/360*20)]
+        number = fields[int(std_polar_pos[1]/360*20)]
 
         # map radius to multipliers or exceptions (bullseye)
         r_in_mm = std_polar_pos[0]
 
         if r_in_mm < 6.35: 
-            score = 50
+            number = 25
             multiplier = 2
         elif r_in_mm < 15.9:
-            score = 25
+            number = 25
             multiplier = 1
         elif r_in_mm < 99 or (r_in_mm > 107 and r_in_mm < 162):
-            score = single_score
             multiplier = 1
         elif r_in_mm > 99 and r_in_mm < 107:
-             score = 3 * single_score
              multiplier = 3
         elif r_in_mm > 162 and r_in_mm < 170:
-             score = 2 * single_score
              multiplier = 2
         else:
-            score = 0
             multiplier = 0
 
-        print(score)
-        return score, multiplier
+        print(number * multiplier)
+        return number, multiplier
 
     def calibration(self, img, closest_field = 20):
         src = self.get_src_points(img, closest_field = closest_field)
