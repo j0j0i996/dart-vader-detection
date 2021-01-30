@@ -29,15 +29,15 @@ if __name__ == '__main__':
     
     camManager.start_cams()
 
-    #camManager.take_pic()
+    camManager.take_pic()
 
     #camManager.manual_calibration()
     #camManager.cam_list[0].calibrate_board(18)
     #camManager.cam_list[1].calibrate_board(11)
     #camManager.cam_list[2].calibrate_board(2) 
 
-    while True:
-        camManager.detection()
+    #while True:
+        #camManager.detection()
 
     #app.run(host='0.0.0.0', port='8090') #, debug=True
 
