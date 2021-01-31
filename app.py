@@ -1,4 +1,3 @@
-from flask import Flask, render_template
 import os
 import json
 import cv2
@@ -6,23 +5,42 @@ import sys
 import src.cameraClass as camCls
 import src.camMngClass as camMng
 import atexit
-import time
+import aiohttp
+import asyncio
 
-app = Flask(__name__)
+GAME_SERVER_URL = 'http://localhost:8000/'
+GAME_ID = 'dascr'
+GAME_URL = GAME_SERVER_URL + 'api/game/' + GAME_ID + '/'
 
 cam_manager = camMng.camManager()
 
 def exit_handler():
     cam_manager.stop_cams()
 
-@app.route('/')
-def index():
-    return render_template('index.html')
+async def main():
 
-@app.route('/wait_throw')
-def get_score():
-    score, multiplier, nextPlayer = cam_manager.detection()
-    return json.dumps({'score': score, 'multiplier': multiplier, 'nextPlayer': nextPlayer})
+    global GAME_SERVER_URL, GAME_ID, GAME_URL
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(GAME_SERVER_URL) as response:
+
+            print("Status:", response.status)
+            print("Content-type:", response.headers['content-type'])
+
+
+        while True:
+            try:
+                number, multiplier, nextPlayer = cam_manager.detection()
+            except Exception as ex:
+                print(ex)
+                continue
+
+            if nextPlayer:
+                async with session.post(GAME_URL + 'nextPlayer') as response:
+                    print(response)
+            else:
+                async with session.post(GAME_URL + 'throw/{}/{}'.format(number, multiplier)) as response:
+                    print(response)
 
 if __name__ == '__main__':
     atexit.register(exit_handler)
@@ -36,11 +54,14 @@ if __name__ == '__main__':
     #cam_manager.cam_list[1].calibrate_board(11)
     #cam_manager.cam_list[2].calibrate_board(2) 
 
-    while True:
-        try:
-            cam_manager.detection()
-        except Exception as ex:
-            print(ex)
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())
+
+    #while True:
+        #try:
+        #    cam_manager.detection()
+        #except Exception as ex:
+        #    print(ex)
             
     #app.run(host='0.0.0.0', port='8090') #, debug=True
 
