@@ -1,4 +1,4 @@
 {
-    "python.pythonPath": "/home/pi/projects/venvs/steel_dart_dect/bin/python3",
+    "python.pythonPath": "venv/bin/python3",
     "python.formatting.provider": "yapf"
 }

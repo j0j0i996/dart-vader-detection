@@ -1,12 +1,12 @@
 import os
 import json
-import cv2
 import sys
 import src.cameraClass as camCls
 import src.camMngClass as camMng
 import atexit
 import aiohttp
 import asyncio
+import cv2
 
 GAME_SERVER_URL = 'http://localhost:8000/'
 GAME_ID = 'dascr'
@@ -54,14 +54,14 @@ if __name__ == '__main__':
     #cam_manager.cam_list[1].calibrate_board(11)
     #cam_manager.cam_list[2].calibrate_board(2) 
 
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
+    #loop = asyncio.get_event_loop()
+    #loop.run_until_complete(main())
 
-    #while True:
-        #try:
-        #    cam_manager.detection()
-        #except Exception as ex:
-        #    print(ex)
+    while True:
+        try:
+            cam_manager.detection()
+        except Exception as ex:
+            print(ex)
             
     #app.run(host='0.0.0.0', port='8090') #, debug=True
 

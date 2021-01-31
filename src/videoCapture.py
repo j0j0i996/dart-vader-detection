@@ -8,7 +8,7 @@ rotations = [None, cv2.ROTATE_90_CLOCKWISE, cv2.ROTATE_180, cv2.ROTATE_90_COUNTE
 
 class VideoStream:
     def __init__(self, src, width, height, rot = 0):
-        
+          
         try:
             self.stream = cv2.VideoCapture(src)
         except:
