@@ -68,6 +68,7 @@ class Board:
         elif r_in_mm > 162 and r_in_mm < 170:
              multiplier = 2
         else:
+            number = 0
             multiplier = 0
 
         print(number * multiplier)

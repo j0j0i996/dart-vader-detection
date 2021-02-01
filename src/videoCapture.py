@@ -19,7 +19,7 @@ class VideoStream:
         self.width = width
         self.height = height
         self.stream.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.75)
-        self.stream.set(cv2.CAP_PROP_EXPOSURE, 5)
+        self.stream.set(cv2.CAP_PROP_EXPOSURE, 15)
 
         self.stream.set(cv2.CAP_PROP_FRAME_WIDTH, 800)
         self.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, 600)
