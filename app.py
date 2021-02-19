@@ -49,15 +49,17 @@ if __name__ == '__main__':
     
     cam_manager.start_cams()
 
-    cam_manager.take_pic()
+    #cam_manager.take_pic()
 
-    cam_manager.manual_calibration()
+    cam_manager.record_video(60)
+
+    #cam_manager.manual_calibration()
     #cam_manager.cam_list[0].calibrate_board(18)
     #cam_manager.cam_list[1].calibrate_board(11)
     #cam_manager.cam_list[2].calibrate_board(2) 
 
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
+    #loop = asyncio.get_event_loop()
+    #loop.run_until_complete(main())
 
     """
     while True:

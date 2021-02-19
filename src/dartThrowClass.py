@@ -33,7 +33,7 @@ class dartThrow:
         #ret, binary_img = cv2.threshold(diffBlur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
         ret, binary_img = cv2.threshold(diffBlur, 16,255,cv2.THRESH_BINARY)
         kernel = np.ones((3,3),np.float32)
-        binary_img = cv2.morphologyEx(binary_img, cv2.MORPH_CLOSE, kernel)
+        #binary_img = cv2.morphologyEx(binary_img, cv2.MORPH_CLOSE, kernel)
 
         bnd_rect = self.get_bnd_rect(binary_img)
 
@@ -84,13 +84,14 @@ class dartThrow:
         # Estimate tip pos by upper intersect of line and box. This is a rough estimation where the tip of the dart is. Is used for priorization of lines
         single_pt = [int((box_y0 - y0) * vx / vy + x0), box_y0]
 
-        #testing
         """
+        #testing
         rec_img = imgAf
         cv2.line(rec_img,(int(top_x),0),(int(bottom_x),height - 1),(255,0,255),1)
         cv2.circle(rec_img,(single_pt[0], single_pt[1]), 2, (200,0,255),2)
         cv2.imwrite("static/jpg/dart_line{}.jpg".format(self.src),rec_img)
         """
+        
 
         t2 = datetime.datetime.now()
         #print('Cam {}: Recognition time: {}'.format(self.src, t2-t1))
@@ -101,7 +102,7 @@ class dartThrow:
 
         height, width = binary_img.shape[:2]
 
-        min_size = height * 0.04 * width * 0.04
+        min_size = height * 0.03 * width * 0.03
 
         # Get contours
         contours, hierarchy = cv2.findContours(binary_img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
