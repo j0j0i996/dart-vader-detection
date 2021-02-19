@@ -10,13 +10,13 @@ import sys
 
 class camManager:
         
-    def __init__(self, width = 800, height = 600):
+    def __init__(self, width = 800, height = 600, local_video = False):
 
         self.width = width
         self.height = height
-        self.src_list = self.get_srcs()
-        #self.src_list = [4]
-        self.cam_list = self.activate_cams()
+        #self.src_list = self.get_srcs()
+        self.src_list = [0,2,4]
+        self.cam_list = self.activate_cams(local_video)
 
         print(self.src_list)
 
@@ -37,10 +37,10 @@ class camManager:
         
         return src_list
 
-    def activate_cams(self):
+    def activate_cams(self, local_video):
         cams = []
         for src in self.src_list:
-            cams.append(camCls.Camera(src=src, rot=180, width = self.width , height = self.height))
+            cams.append(camCls.Camera(src=src, rot=180, width = self.width , height = self.height, local_video=local_video))
         return cams
 
     def start_cams(self):
@@ -55,6 +55,14 @@ class camManager:
     def take_pic(self):
         for cam in self.cam_list:
             cam.take_pic()
+    
+    def record_video(self, duration):
+        t_list = []
+        for cam in self.cam_list:
+            t = Thread(target=cam.record_video, args=(duration,))
+            t.start()
+            t_list.append(t)
+
 
     def manual_calibration(self):
         for cam in self.cam_list:
@@ -148,7 +156,7 @@ class camManager:
 
             else:
                 
-                """
+                
                 #get two single pts which are closest together
                 def dist(pt1, pt2):
                     comparison = pt1 == pt2
@@ -162,7 +170,6 @@ class camManager:
                 ind = np.unravel_index(dist_matrix.argmin(), dist_matrix.shape)
                 single_pt_list = [single_pt_list[i] for i in list(ind)]
 
-                """
                 
                 #get avg of single points
                 avg_single_pt = np.mean(single_pt_list, axis = 0)
@@ -183,13 +190,14 @@ class camManager:
                 # take intesect which is closest to avg_single_pt as dart tip pos
                 dist_list = [np.linalg.norm(pt-avg_single_pt) for pt in intersect_list]
                 pos = intersect_list[np.argmin(dist_list)]
-
+                """
                 #testing
-                #img = cam.board.draw_board()
-                #for line in line_list:
-                #    cv2.line(img,(int(line[0][0]),int(line[0][1])), (int(line[1][0]),int(line[1][1])), 255, 2)
-                #cv2.circle(img, (int(pos[0]), int(pos[1])), 3, (255,0,0), 2
-                #cv2.imwrite('static/jpg/recognition.jpg', img)
+                img = cam.board.draw_board()
+                for line in line_list:
+                    cv2.line(img,(int(line[0][0]),int(line[0][1])), (int(line[1][0]),int(line[1][1])), 255, 2)
+                cv2.circle(img, (int(pos[0]), int(pos[1])), 3, (255,0,0), 2)
+                cv2.imwrite('static/jpg/recognition.jpg', img)
+                """
 
                 score, multiplier = boardCls.Board.get_score(pos)
 

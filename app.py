@@ -7,12 +7,13 @@ import atexit
 import aiohttp
 import asyncio
 import cv2
+import time
 
 GAME_SERVER_URL = 'http://192.168.0.96:8000/api/'
 GAME_ID = 'player'
 GAME_URL = GAME_SERVER_URL + 'game/' + GAME_ID + '/'
 
-cam_manager = camMng.camManager()
+cam_manager = camMng.camManager(local_video=False)
 
 def exit_handler():
     cam_manager.stop_cams()
@@ -49,23 +50,24 @@ if __name__ == '__main__':
     
     cam_manager.start_cams()
 
-    cam_manager.take_pic()
+    #cam_manager.take_pic()
 
-    cam_manager.manual_calibration()
+    #cam_manager.record_video(60)
+
+    #cam_manager.manual_calibration()
     #cam_manager.cam_list[0].calibrate_board(18)
     #cam_manager.cam_list[1].calibrate_board(11)
     #cam_manager.cam_list[2].calibrate_board(2) 
 
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
+    #loop = asyncio.get_event_loop()
+    #loop.run_until_complete(main())
 
-    """
+    
     while True:
         try:
             cam_manager.detection()
         except Exception as ex:
             print(ex)
-    """
             
     #app.run(host='0.0.0.0', port='8090') #, debug=True
 

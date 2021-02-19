@@ -8,10 +8,10 @@ import src.videoCapture as videoCapture
 import src.db_handler as db
 class Camera:
         
-    def __init__(self, src, width, height, rot = 0):
+    def __init__(self, src, width, height, rot = 0, local_video = False):
 
         self.src = src
-        self.cap = videoCapture.VideoStream(src = src, width = width, height = height, rot = rot)
+        self.cap = videoCapture.VideoStream(src = src, width = width, height = height, rot = rot, local_video=local_video)
         
         # get transformation from sql
         h = db.get_trafo(self.src)
@@ -53,7 +53,32 @@ class Camera:
 
         cv2.imwrite('static/jpg/last_{}.jpg'.format(self.src), img)
 
+        self.cap.stop()
+        
         return img
+
+    def record_video(self, duration):
+
+        frame_width = int(self.cap.stream.get(3))
+        frame_height = int(self.cap.stream.get(4))
+        path = '../dart_test_vids/test_vids/vid{}.avi'.format(self.src)
+        out = cv2.VideoWriter(path ,cv2.VideoWriter_fourcc('M','J','P','G'), 8, (frame_width,frame_height))
+
+        if self.cap.running == False:
+            self.start()
+
+        t1 = datetime.datetime.now()
+        while((datetime.datetime.now()-t1).total_seconds() < duration):
+            img, success = self.cap.read()
+
+            if success == True: 
+                out.write(img)
+            else:
+                break
+
+        self.cap.stop()
+        out.release()
+
 
     def calibrate_board(self, closest_field):
 
