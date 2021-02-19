@@ -8,10 +8,10 @@ import src.videoCapture as videoCapture
 import src.db_handler as db
 class Camera:
         
-    def __init__(self, src, width, height, rot = 0):
+    def __init__(self, src, width, height, rot = 0, local_video = False):
 
         self.src = src
-        self.cap = videoCapture.VideoStream(src = src, width = width, height = height, rot = rot)
+        self.cap = videoCapture.VideoStream(src = src, width = width, height = height, rot = rot, local_video=local_video)
         
         # get transformation from sql
         h = db.get_trafo(self.src)

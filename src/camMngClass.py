@@ -10,13 +10,13 @@ import sys
 
 class camManager:
         
-    def __init__(self, width = 800, height = 600):
+    def __init__(self, width = 800, height = 600, local_video = False):
 
         self.width = width
         self.height = height
         #self.src_list = self.get_srcs()
         self.src_list = [0,2,4]
-        self.cam_list = self.activate_cams()
+        self.cam_list = self.activate_cams(local_video)
 
         print(self.src_list)
 
@@ -37,10 +37,10 @@ class camManager:
         
         return src_list
 
-    def activate_cams(self):
+    def activate_cams(self, local_video):
         cams = []
         for src in self.src_list:
-            cams.append(camCls.Camera(src=src, rot=180, width = self.width , height = self.height))
+            cams.append(camCls.Camera(src=src, rot=180, width = self.width , height = self.height, local_video=local_video))
         return cams
 
     def start_cams(self):
