@@ -14,8 +14,8 @@ class camManager:
 
         self.width = width
         self.height = height
-        #self.src_list = self.get_srcs()
-        self.src_list = [0,2,4]
+        self.src_list = self.get_srcs()
+        #self.src_list = [0,2,4]
         self.cam_list = self.activate_cams(local_video)
 
         print(self.src_list)
@@ -46,7 +46,7 @@ class camManager:
     def start_cams(self):
         for cam in self.cam_list:
             cam.start()
-        time.sleep(3)
+        time.sleep(7)
 
     def stop_cams(self):
         for cam in self.cam_list:

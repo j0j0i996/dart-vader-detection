@@ -69,7 +69,7 @@ class Board:
              multiplier = 2
         else:
             number = 0
-            multiplier = 0
+            multiplier = 1
 
         print(number * multiplier)
         return number, multiplier

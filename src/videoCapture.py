@@ -20,7 +20,7 @@ class VideoStream:
                 codec = cv2.VideoWriter_fourcc( 'M', 'J', 'P', 'G'    )
                 self.stream.set(cv2.CAP_PROP_FOURCC, codec)
                 self.stream.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.75)
-                self.stream.set(cv2.CAP_PROP_EXPOSURE, 15)
+                self.stream.set(cv2.CAP_PROP_EXPOSURE, 12)
                 self.stream.set(cv2.CAP_PROP_FRAME_WIDTH, 800)
                 self.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, 600)
                 self.stream.set(cv2.CAP_PROP_FPS, 8)

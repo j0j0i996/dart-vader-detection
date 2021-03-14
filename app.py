@@ -4,71 +4,58 @@ import sys
 import src.cameraClass as camCls
 import src.camMngClass as camMng
 import atexit
-import aiohttp
 import asyncio
+import websockets
 import cv2
 import time
+import logging
 
-GAME_SERVER_URL = 'http://192.168.0.96:8000/api/'
-GAME_ID = 'player'
-GAME_URL = GAME_SERVER_URL + 'game/' + GAME_ID + '/'
+logger = logging.getLogger('Logging')
+logger.setLevel(logging.DEBUG)
+fh = logging.FileHandler('logger.log')
+fh.setLevel(logging.DEBUG)
+logger.addHandler(fh)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+fh.setFormatter(formatter)
 
 cam_manager = camMng.camManager(local_video=False)
 
 def exit_handler():
     cam_manager.stop_cams()
 
-async def main():
-
-    global GAME_SERVER_URL, GAME_ID, GAME_URL
-
-    async with aiohttp.ClientSession() as session:
-        async with session.get(GAME_SERVER_URL) as response:
-
-            print("Status:", response.status)
-            print("Content-type:", response.headers['content-type'])
-
-
-        
-        while True:
-            try:
-                number, multiplier, nextPlayer = cam_manager.detection()
-            except Exception as ex:
-                print(ex)
-                continue
-
-            if nextPlayer:
-                async with session.post(GAME_URL + 'nextPlayer') as response:
-                    print(response)
-            else:
-                async with session.post(GAME_URL + 'throw/{}/{}'.format(number, multiplier)) as response:
-                    print(response)
-        
+async def app(websocket, path):
+    logger.info('Server connected')
+    while True:
+        try:
+            field, multiplier, nextPlayer = cam_manager.detection()
+            await websocket.send(json.dumps({"field": field, "multiplier": multiplier, "nextPlayer": nextPlayer}))
+            print('message sent')
+            logger.info('Event detected')
+        except Exception as ex:
+                print(ex)      
+                logger.error(ex)
 
 if __name__ == '__main__':
+
+    logger.info('Program start')
     atexit.register(exit_handler)
-    
+
     cam_manager.start_cams()
 
+    start_server = websockets.serve(app, "192.168.0.10", 8765)
+
+    asyncio.get_event_loop().run_until_complete(start_server)
+    asyncio.get_event_loop().run_forever()
+
     #cam_manager.take_pic()
-
-    #cam_manager.record_video(60)
-
     #cam_manager.manual_calibration()
-    #cam_manager.cam_list[0].calibrate_board(18)
-    #cam_manager.cam_list[1].calibrate_board(11)
-    #cam_manager.cam_list[2].calibrate_board(2) 
 
-    #loop = asyncio.get_event_loop()
-    #loop.run_until_complete(main())
-
-    
+    """
     while True:
         try:
             cam_manager.detection()
         except Exception as ex:
             print(ex)
-            
-    #app.run(host='0.0.0.0', port='8090') #, debug=True
+    """
 
     cam_manager.stop_cams()
