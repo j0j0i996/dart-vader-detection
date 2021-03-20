@@ -7,6 +7,7 @@ import numpy as np
 import time
 import datetime
 import sys
+import json
 
 class camManager:
         
@@ -17,6 +18,7 @@ class camManager:
         self.src_list = self.get_srcs()
         #self.src_list = [0,2,4]
         self.cam_list = self.activate_cams(local_video)
+        self.dect_loop_active = False
 
         print(self.src_list)
 
@@ -67,6 +69,16 @@ class camManager:
     def manual_calibration(self):
         for cam in self.cam_list:
             cam.manual_calibration()
+
+    def dect_loop(self,sio):
+        self.dect_loop_active = True
+        while self.dect_loop_active == True:
+            try:
+                field, multiplier, nextPlayer = self.detection()
+                sio.emit('dart', json.dumps({"field": field, "multiplier": multiplier, "nextPlayer": nextPlayer}))
+                print('message sent')
+            except Exception as ex:
+                    print(ex) 
 
     def detection(self):
 
