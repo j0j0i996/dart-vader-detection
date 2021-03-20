@@ -3,12 +3,18 @@ import json
 import sys
 import src.cameraClass as camCls
 import src.camMngClass as camMng
+#import src.dectHandler as dectHandler
 import atexit
 import asyncio
 import websockets
 import cv2
 import time
 import logging
+from flask import Flask
+from flask_socketio import SocketIO, send, emit
+
+SOCKET_SERVER_URL = '192.168.0.10'
+PORT = 3000
 
 logger = logging.getLogger('Logging')
 logger.setLevel(logging.DEBUG)
@@ -20,20 +26,34 @@ fh.setFormatter(formatter)
 
 cam_manager = camMng.camManager(local_video=False)
 
+app = Flask(__name__)
+#app.config['SECRET_KEY'] = 'secret!'
+sio = SocketIO(app)
+
 def exit_handler():
     cam_manager.stop_cams()
 
-async def app(websocket, path):
-    logger.info('Server connected')
-    while True:
-        try:
-            field, multiplier, nextPlayer = cam_manager.detection()
-            await websocket.send(json.dumps({"field": field, "multiplier": multiplier, "nextPlayer": nextPlayer}))
-            print('message sent')
-            logger.info('Event detected')
-        except Exception as ex:
-                print(ex)      
-                logger.error(ex)
+@sio.on('connect')
+def connect():
+    print('connected')
+
+@sio.on('echo')
+def echo(message):
+    print(message)
+    #emit('echoresponse', {'data': message['data']})
+
+@sio.on('start_dect')
+def start_dect(msg):
+    if cam_manager.dect_loop_active == False:
+        sio.start_background_task(target = cam_manager.dect_loop(sio))
+
+@sio.on('end_dect')
+def end_dect(msg):
+    cam_manager.dect_loop_active = False
+
+@sio.on('disconnect')
+def disconnect():
+    print('disconnected')
 
 if __name__ == '__main__':
 
@@ -42,20 +62,9 @@ if __name__ == '__main__':
 
     cam_manager.start_cams()
 
-    start_server = websockets.serve(app, "192.168.0.10", 8765)
-
-    asyncio.get_event_loop().run_until_complete(start_server)
-    asyncio.get_event_loop().run_forever()
+    sio.run(app, host=SOCKET_SERVER_URL, port=PORT)
 
     #cam_manager.take_pic()
     #cam_manager.manual_calibration()
-
-    """
-    while True:
-        try:
-            cam_manager.detection()
-        except Exception as ex:
-            print(ex)
-    """
 
     cam_manager.stop_cams()
