@@ -8,25 +8,22 @@ import src.videoCapture as videoCapture
 import src.db_handler as db
 class Camera:
         
-    def __init__(self, src, width, height, rot = 0, local_video = False):
+    def __init__(self, src, width, height, rot = 0):
 
         self.src = src
-        self.cap = videoCapture.VideoStream(src = src, width = width, height = height, rot = rot, local_video=local_video)
-        
-        # get transformation from sql
         h = db.get_trafo(self.src)
-    
-        if h is not None:
+        exp = db.get_exposure(self.src)
+
+        if exp is not None and h is not None:
+            self.cap = videoCapture.VideoStream(src = self.src, width = width, height = height, rot = rot, exp = exp)
             self.board = boardClass.Board(h = h, src = self.src)
         else:
+            self.cap = videoCapture.VideoStream(src = self.src, width = width, height = height, rot = rot)
             self.board = boardClass.Board(src = self.src)
 
         self.dartThrow = None
         self.stop_dect_tread = False
         self.is_hand_motion = False
-
-        #testing
-        self.img_count = 7
 
     def start(self):
         self.cap.start()
@@ -80,15 +77,27 @@ class Camera:
         out.release()
 
 
-    def calibrate_board(self, closest_field):
+    def auto_calibration(self, closest_field):
+        
+        exp_times = (15, 12, 20, 9, 25, 6, 30, 35, 40, 45, 50, 60, 70, 80) # move to constants
+        exp_it = iter(exp_times)
 
-        img = self.take_pic()
+        success = False
+        while not success: 
+            try:
+                exp_time = next(exp_it)
+                print(exp_time)
+                self.cap.stream.set(cv2.CAP_PROP_EXPOSURE, exp_time)
+                img = self.take_pic()
+                success = self.board.auto_calibration(img, closest_field = closest_field)
 
-        self.board.calibration(img, closest_field = closest_field)
+            except StopIteration:
+                return False
+
         h = self.board.h
-        db.write_trafo(self.src, h)
-
+        db.write_row(self.src, h, exp_time)
         self.stop()
+        return True
 
     def manual_calibration(self):
         self.board.manual_calibration()
@@ -127,19 +136,9 @@ class Camera:
 
             # Get difference ratio of image befor motion and image after motion
             ratio_final = Camera.get_img_diff_ratio(img_before,img_after)
-            #print("Ratio cam {} = {}".format(self.src,ratio_final))
             
             # Criteria for being a dart:
             if t_motion < T_MAX and ratio_final < MAX_RATIO and ratio_final > MIN_RATIO:
-                #dart detected
-                
-                #Testing
-                #cv2.imwrite('static/jpg/before_{}.jpg'.format(self.src), img_before)
-                #cv2.imwrite('static/jpg/after_{}.jpg'.format(self.src), img_after)
-                #cv2.imwrite('static/session_imgs/before_{}_{}.jpg'.format(self.src, self.img_count),img_before)
-                #cv2.imwrite('static/session_imgs/after_{}_{}.jpg'.format(self.src, self.img_count),img_after)
-                #self.img_count = self.img_count + 1
-
                 self.dartThrow = dartThrowClass.dartThrow(img_before,img_after, self.src)
                 self.is_hand_motion = False
                 self.stop_dect_thread = True
