@@ -7,25 +7,20 @@ import numpy as np
 rotations = [None, cv2.ROTATE_90_CLOCKWISE, cv2.ROTATE_180, cv2.ROTATE_90_COUNTERCLOCKWISE]
 
 class VideoStream:
-    def __init__(self, src, width, height, rot = 0, local_video = False):
+    def __init__(self, src, width, height, rot = 0, exp = 15):
 
         self.width = width
         self.height = height
-        self.local_video = local_video
           
         try:
-            if self.local_video is False:
-                self.stream = cv2.VideoCapture(src)
-
-                codec = cv2.VideoWriter_fourcc( 'M', 'J', 'P', 'G'    )
-                self.stream.set(cv2.CAP_PROP_FOURCC, codec)
-                self.stream.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.75)
-                self.stream.set(cv2.CAP_PROP_EXPOSURE, 12)
-                self.stream.set(cv2.CAP_PROP_FRAME_WIDTH, 800)
-                self.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, 600)
-                self.stream.set(cv2.CAP_PROP_FPS, 8)
-            else:
-                self.stream = cv2.VideoCapture('../dart_test_vids/test_vids/vid{}.avi'.format(src))
+            self.stream = cv2.VideoCapture(src)
+            codec = cv2.VideoWriter_fourcc( 'M', 'J', 'P', 'G'    )
+            self.stream.set(cv2.CAP_PROP_FOURCC, codec)
+            self.stream.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.75)
+            self.stream.set(cv2.CAP_PROP_EXPOSURE, exp)
+            self.stream.set(cv2.CAP_PROP_FRAME_WIDTH, 800)
+            self.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, 600)
+            self.stream.set(cv2.CAP_PROP_FPS, 8)
         except:
             print("Not able to open camera {}".format(src))
 
@@ -45,8 +40,6 @@ class VideoStream:
             success, frame = self.stream.read()
             self.success, self.frame = success, frame
             self.update_count = self.update_count + 1
-            if self.local_video:
-                time.sleep(1/15)
 
     def read(self):
         frame, success = self.frame, self.success

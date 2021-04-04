@@ -1,13 +1,14 @@
 import numpy as np
 import cv2
 import json
+import sys
 
 class Board:
 
     STD_CENTER = [400, 400]
     PX_PER_MM = 2
 
-    def __init__(self, h = None, src = 0):
+    def __init__(self, h = None, exp=None, src = 0):
         self.h = h
         self.src = src
 
@@ -74,18 +75,52 @@ class Board:
         print(number * multiplier)
         return number, multiplier
 
-    def calibration(self, img, closest_field = 20):
-        src = self.get_src_points(img, closest_field = closest_field)
-        dest = self.get_dest_points()
-        h, status = cv2.findHomography(src, dest)
+    def auto_calibration(self, img, closest_field):
+        ring_list = [{'k': 0, 'r': 99, 'alias': 'Inner Triple'},
+                    {'k': 1, 'r': 107, 'alias': 'Outer Triple'},
+                    {'k': 2, 'r': 162, 'alias': 'Inner Double'},
+                    {'k': 3, 'r': 170, 'alias': 'Outer Triple'}] # TODO move to constants {'k': 2, 'r': 162, 'alias': 'Inner Double'},  {'k': 1, 'r': 107, 'alias': 'Outer Triple'},
 
-        cv2.imwrite('static/jpg/calibration_{}.jpg'.format(self.src), img)
-        warp_img = cv2.warpPerspective(img, h, (self.STD_CENTER[0]*2,self.STD_CENTER[1]*2))
-        warp_img = self.draw_board(warp_img)
+        ellipses = self.get_ellipses(img)
+        if len(ellipses) != 5:
+            return False
 
-        cv2.imwrite('static/jpg/calibration_warp_{}.jpg'.format(self.src), warp_img)
+        rel_center = ellipses[0][0]
+        ellipses = ellipses[1:]
+        
+        src = []
+        dest = []
+        fail_counter = 0
+        for ring in ring_list:
+            try:
+                lines = self.get_lines(img, ellipses[ring['k']], rel_center, ring['r'])
+                new_src = self.get_src_points(lines, closest_field = closest_field)
+            except: 
+                e = sys.exc_info()
+                print(e)
+                fail_counter += 1
+                continue
+        
+            new_dest = self.get_dest_points(ring['r'])
+            src = [*src, *new_src]
+            dest = [*dest, *new_dest]
 
-        self.h = h
+        if fail_counter < 1:
+            h, status = cv2.findHomography(np.array(src), np.array(dest))
+            self.h = h
+
+            warp_img = cv2.warpPerspective(img, h, (self.STD_CENTER[0]*2,self.STD_CENTER[1]*2))
+            warp_img = self.draw_board(warp_img)
+            cv2.imwrite('static/jpg/calibration_warp_{}.jpg'.format(self.src), warp_img)
+
+            for pt in src:
+                img = cv2.circle(img, (int(pt[0]),int(pt[1])), 2, 255, 2)
+                cv2.imwrite('static/jpg/calibration_pts_{}.jpg'.format(self.src), img)
+            
+            return True
+        else: 
+            print('Too many fails')
+            return False
     
     def manual_calibration(self):
 
@@ -100,7 +135,7 @@ class Board:
         
         # get destination points
         dest_pts = []
-        r_list = [170]
+        r_list = [170] # 107 for outer triple and 170 for outer double
         r_list = [x * self.PX_PER_MM for x in r_list]
 
         angle_list = [81, -9, 261, 171]
@@ -118,16 +153,7 @@ class Board:
         warp_img = self.draw_board(warp_img)
         cv2.imwrite('static/jpg/calibration_warp_{}.jpg'.format(self.src), warp_img)
 
-        
-
-    def get_src_points(self, img, closest_field):
-        #For now just outer circle
-        ellipses = self.get_ellipses(img)
-        rel_center = ellipses[0][0]
-        mask_black = np.zeros_like(img)
-        mask = cv2.ellipse(mask_black,ellipses[1] ,color=(255,255,255), thickness=-1)
-        result_circle_complete = cv2.bitwise_and(img,mask)
-        lines = self.get_lines(result_circle_complete, rel_center)
+    def get_src_points(self, lines, closest_field):
         
         src_points = np.empty([len(lines)*2,2])
         src_pos = 0
@@ -139,15 +165,11 @@ class Board:
 
         # Shift src points depending on pos of camera
         # Convention: clockwise start from point between 20 and 1
-        fields = [20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5]
+        fields = [20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5] # TODO Make constants
         idx = fields.index(closest_field)
         src_points = np.roll(src_points, idx, axis=0)
 
-        for pt in src_points:
-            img = cv2.circle(img, (int(pt[0]),int(pt[1])), 2, 255, 2)
-        cv2.imwrite('static/jpg/calibration_{}.jpg'.format(self.src), img)
-
-        return src_points
+        return src_points.tolist()
 
     @classmethod
     def pol2cath(cls, r, phi):
@@ -158,37 +180,54 @@ class Board:
         return [x,y]
 
     @classmethod
-    def get_dest_points(cls):
+    def get_dest_points(cls, r):
         dest_points = np.empty([20,2])
-        r = 170 * cls.PX_PER_MM # Important -> outer edge of triple ring
+        r_px = r * cls.PX_PER_MM # 107 for outer triple and 170 for outer double
         for i in range(20):
             angle = 90 - 180/20 - i * 360 / 20
-            dest_points[i] = np.array(cls.pol2cath(r, angle))
+            dest_points[i] = np.array(cls.pol2cath(r_px, angle))
         return dest_points
 
     @classmethod
     def draw_board(cls , img = None):
+
+        color = (0,76,252)
+        background_color = (66,30,4)
+        thickness = 2
+        r_list = [16, 99, 107, 162, 170]
+        r_list = [x * cls.PX_PER_MM for x in r_list] # TODO CONSTANTS
+
         if img is None:
             img = np.zeros((cls.STD_CENTER[0] * 2, cls.STD_CENTER[1] * 2))
-        r_list = [16, 99, 107, 162, 170]
-        r_list = [x * cls.PX_PER_MM for x in r_list]
+        overlay = img.copy()
+
         for r in r_list:
-            cv2.circle(img, (cls.STD_CENTER[0], cls.STD_CENTER[1]), r, (255, 255, 255), 2)
+            cv2.circle(img, (cls.STD_CENTER[0], cls.STD_CENTER[1]), r, color, thickness)
+
+        cv2.circle(overlay, (cls.STD_CENTER[0], cls.STD_CENTER[1]), r, background_color, -1)
         
         r = 170 * cls.PX_PER_MM
         for phi in range(9,360,18):
             x,y = cls.pol2cath(r, phi)
-            cv2.line(img, (cls.STD_CENTER[0], cls.STD_CENTER[1]), (int(x),int(y)), (255, 255, 255), 1)
+            cv2.line(img, (cls.STD_CENTER[0], cls.STD_CENTER[1]), (int(x),int(y)), color, thickness)
+
+        alpha = 0.2
+        img = cv2.addWeighted(overlay, alpha, img, 1 - alpha, 0)
 
         return img
 
-    def get_lines(self, img, rel_center):
+    def get_lines(self, img, ellipse, rel_center, r):
 
-        gray_img_dark = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        #For now just outer circle
+        mask_black = np.zeros_like(img)
+        mask = cv2.ellipse(mask_black, ellipse ,color=(255,255,255), thickness=-1)
+        ring_cutout = cv2.bitwise_and(img, mask)
+
+        gray_img_dark = cv2.cvtColor(ring_cutout, cv2.COLOR_BGR2GRAY)
         bil = cv2.bilateralFilter(gray_img_dark, 8, 70, 70)
         canny = cv2.Canny(bil, 80, 130)
         kernel = np.ones((2,2),np.float32)
-        dilation = cv2.dilate(canny,kernel,iterations = 1)
+        dilation = cv2.dilate(canny,kernel, iterations = 1)
 
         lines = cv2.HoughLinesP(dilation,  1, 1*np.pi/180, 45, minLineLength=70, maxLineGap=200)
         mask_black = np.zeros_like(img)
@@ -204,7 +243,6 @@ class Board:
             p1 = np.array([x1,y1])
             p2 = np.array([x2,y2])
             #cv2.line(gray_img_dark,(x1,y1), (x2, y2),0, 3)
-
             dist2center = abs(np.cross(p2-p1,rel_center-p1)/np.linalg.norm(p2-p1))
             
             if dist2center < 2:
@@ -259,7 +297,7 @@ class Board:
         gray_img_dark = cv2.cvtColor(masked_img,cv2.COLOR_BGR2GRAY)
 
         _, thresh = cv2.threshold(gray_img_dark, 150, 255, cv2.THRESH_BINARY)
-        thresh = cv2.bilateralFilter(thresh, 8, 100, 100)
+        thresh = cv2.bilateralFilter(thresh, 7, 100, 100)
 
         contours, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
         cntsSorted = sorted(contours, key=cv2.contourArea, reverse=True)
@@ -269,22 +307,23 @@ class Board:
         if len(cntsSorted) > 10:
             cntsSorted = cntsSorted[:10]
         for cnt in cntsSorted:
-            center, [width, height], angle = cv2.fitEllipse(cnt)
-            width = width - 3
-            height = height - 3
-            ellipse = center, [width, height], angle
-
+            ellipse = cv2.fitEllipse(cnt)
             if cv2.pointPolygonTest(cntsSorted[0],(ellipse[0][0],ellipse[0][1]),False) >= 0:
                 ellipses.append(ellipse)
 
-        # get smallest and third smallest ellipses
-        sizes = [x[1][0] * x[1][1] for x in ellipses]
-        index = np.argsort(sizes)
-        ellipses = [ellipses[index[0]], ellipses[index[4]]]
-        
+        # sort after size
+        ellipses.sort(key=lambda ell: ell[1][0] * ell[1][1])
+        if len(ellipses) > 5:
+            ellipses = ellipses[-5:]
+        print('length: {}'.format(len(ellipses)))
+
+
+        #draw
+        ell_img = img.copy()
+        for ellipse in ellipses:
+            cv2.ellipse(ell_img, ellipse ,color=(255,255,255), thickness=1)
+        cv2.imwrite('static/jpg/ellipses_{}.jpg'.format(self.src), ell_img)
         return ellipses
-
-
 
 if __name__ == '__main__':
     img = Board.draw_board()

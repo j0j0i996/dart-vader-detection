@@ -11,17 +11,16 @@ import json
 
 class camManager:
         
-    def __init__(self, width = 800, height = 600, local_video = False):
+    def __init__(self, width = 800, height = 600):
 
         self.width = width
         self.height = height
         self.src_list = self.get_srcs()
         #self.src_list = [0,2,4]
-        self.cam_list = self.activate_cams(local_video)
+        self.cam_list = self.activate_cams()
         self.dect_loop_active = False
 
         print(self.src_list)
-
 
     @staticmethod
     def get_srcs():
@@ -39,10 +38,10 @@ class camManager:
         
         return src_list
 
-    def activate_cams(self, local_video):
+    def activate_cams(self):
         cams = []
         for src in self.src_list:
-            cams.append(camCls.Camera(src=src, rot=180, width = self.width , height = self.height, local_video=local_video))
+            cams.append(camCls.Camera(src=src, rot=180, width = self.width , height = self.height))
         return cams
 
     def start_cams(self):
@@ -65,7 +64,6 @@ class camManager:
             t.start()
             t_list.append(t)
 
-
     def manual_calibration(self):
         for cam in self.cam_list:
             cam.manual_calibration()
@@ -81,8 +79,6 @@ class camManager:
                     print(ex) 
 
     def detection(self):
-
-        # start motion detection
         t_list = []
         for cam in self.cam_list:
             t = Thread(target=cam.dart_motion_dect, args=())
@@ -109,7 +105,7 @@ class camManager:
         t0 = datetime.datetime.now()
         t_now = datetime.datetime.now()
 
-        T_MAX = 0.4 #treshold
+        T_MAX = 0.4 #threshold
         while (t_now-t0).total_seconds() < T_MAX and len(dect_cams) < len(self.cam_list):
             for i in undetected_indx:
                 cam = self.cam_list[i]
