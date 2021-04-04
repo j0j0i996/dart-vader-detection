@@ -211,7 +211,7 @@ class Board:
             x,y = cls.pol2cath(r, phi)
             cv2.line(img, (cls.STD_CENTER[0], cls.STD_CENTER[1]), (int(x),int(y)), color, thickness)
 
-        alpha = 0.4
+        alpha = 0.2
         img = cv2.addWeighted(overlay, alpha, img, 1 - alpha, 0)
 
         return img
