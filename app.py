@@ -44,6 +44,7 @@ def end_dect(msg):
 
 @sio.on('disconnect')
 def disconnect():
+    cam_manager.dect_loop_active = False
     print('disconnected')
 
 @app.route('/echo/<msg>', methods=['GET'])
@@ -59,9 +60,20 @@ def calibraton():
     return str(success)
 
 @app.route('/get-cal-img/<int:cam_idx>', methods=['GET'])
+def get_last_img(cam_idx):
+    src = cam_manager.cam_list[cam_idx].src
+    filename = 'calibration_{}.jpg'.format(src)
+    safe_path = safe_join(app.config["IMAGES"], filename)
+
+    try: 
+        return send_file(safe_path, as_attachment=False)
+    except FileNotFoundError:
+        abort(404)
+
+@app.route('/get-last-img/<int:cam_idx>', methods=['GET'])
 def get_cal_img(cam_idx):
     src = cam_manager.cam_list[cam_idx].src
-    filename = 'calibration_warp_{}.jpg'.format(src)
+    filename = 'last_{}.jpg'.format(src)
     safe_path = safe_join(app.config["IMAGES"], filename)
 
     try: 

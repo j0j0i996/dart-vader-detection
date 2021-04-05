@@ -109,9 +109,13 @@ class Board:
             h, status = cv2.findHomography(np.array(src), np.array(dest))
             self.h = h
 
-            warp_img = cv2.warpPerspective(img, h, (self.STD_CENTER[0]*2,self.STD_CENTER[1]*2))
-            warp_img = self.draw_board(warp_img)
+            warp_img = cv2.warpPerspective(img.copy(), h, (self.STD_CENTER[0]*2,self.STD_CENTER[1]*2))
+            warp_img = self.draw_board(background_img=warp_img)
             cv2.imwrite('static/jpg/calibration_warp_{}.jpg'.format(self.src), warp_img)
+
+            inv_h, status = cv2.findHomography(np.array(dest), np.array(src))
+            cal_img = self.draw_board(background_img=img, h=inv_h)
+            cv2.imwrite('static/jpg/calibration_{}.jpg'.format(self.src), cal_img)
 
             for pt in src:
                 img = cv2.circle(img, (int(pt[0]),int(pt[1])), 2, 255, 2)
@@ -189,7 +193,7 @@ class Board:
         return dest_points
 
     @classmethod
-    def draw_board(cls , img = None):
+    def draw_board(cls ,background_img = None, h = None):
 
         color = (0,76,252)
         background_color = (66,30,4)
@@ -197,22 +201,43 @@ class Board:
         r_list = [16, 99, 107, 162, 170]
         r_list = [x * cls.PX_PER_MM for x in r_list] # TODO CONSTANTS
 
-        if img is None:
-            img = np.zeros((cls.STD_CENTER[0] * 2, cls.STD_CENTER[1] * 2))
-        overlay = img.copy()
+        draw_img = np.zeros((cls.STD_CENTER[0] * 2, cls.STD_CENTER[1] * 2, 3), np.uint8)
+
+        overlay = draw_img.copy()
+        cv2.circle(overlay, (cls.STD_CENTER[0], cls.STD_CENTER[1]), r_list[-1], background_color, -1)
+        alpha = 1
+        draw_img = cv2.addWeighted(overlay, alpha, draw_img, 1 - alpha, 0)
 
         for r in r_list:
-            cv2.circle(img, (cls.STD_CENTER[0], cls.STD_CENTER[1]), r, color, thickness)
+            cv2.circle(draw_img, (cls.STD_CENTER[0], cls.STD_CENTER[1]), r, color, thickness)
 
         cv2.circle(overlay, (cls.STD_CENTER[0], cls.STD_CENTER[1]), r, background_color, -1)
         
         r = 170 * cls.PX_PER_MM
         for phi in range(9,360,18):
             x,y = cls.pol2cath(r, phi)
-            cv2.line(img, (cls.STD_CENTER[0], cls.STD_CENTER[1]), (int(x),int(y)), color, thickness)
+            cv2.line(draw_img, (cls.STD_CENTER[0], cls.STD_CENTER[1]), (int(x),int(y)), color, thickness)
 
-        alpha = 0.2
-        img = cv2.addWeighted(overlay, alpha, img, 1 - alpha, 0)
+        font                   = cv2.FONT_HERSHEY_SIMPLEX
+        bottomLeftCornerOfText = (int(cls.STD_CENTER[0]-35),45)
+        fontScale              = 2
+        fontColor              = color
+        lineType               = 7
+
+        cv2.putText(draw_img,'20', 
+            bottomLeftCornerOfText, 
+            font, 
+            fontScale,
+            fontColor,
+            lineType)
+
+        if h is not None:
+            draw_img = cv2.warpPerspective(draw_img, h, (background_img.shape[1],background_img.shape[0]))
+
+        if background_img is not None:
+            img = cv2.addWeighted(draw_img,1,background_img,0.7,0)
+        else:
+            img = draw_img
 
         return img
 
