@@ -31,7 +31,7 @@ class Camera:
     def stop(self):
         self.cap.stop()
 
-    def take_pic(self):
+    def take_pic(self, path = None):
         if self.cap.running == False:
             self.start()
 
@@ -48,7 +48,10 @@ class Camera:
 
         print(img.shape)
 
-        cv2.imwrite('static/jpg/last_{}.jpg'.format(self.src), img)
+        if path = None:
+            cv2.imwrite('static/jpg/last_{}.jpg'.format(self.src), img)
+        else:
+            cv2.imwrite(path, img)
 
         self.cap.stop()
         
@@ -79,7 +82,7 @@ class Camera:
 
     def auto_calibration(self, closest_field):
         
-        exp_times = (15, 12, 20, 9, 25, 6, 30, 35, 40, 45, 50, 60, 70, 80) # move to constants
+        exp_times = (15, 12, 20, 9, 25, 6, 30, 35) # move to constants
         exp_it = iter(exp_times)
 
         success = False
