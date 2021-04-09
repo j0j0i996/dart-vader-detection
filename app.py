@@ -54,9 +54,9 @@ def echo(msg):
 
 @app.route('/calibration', methods=['PATCH'])
 def calibraton():
-    closest_field = request.args.get('closest_field')
-    cam_idx = request.args.get('cam_idx')
-    success = cam_manager.cam_list[int(cam_idx)].auto_calibration(int(closest_field))
+    closest_field = int(request.args.get('closest_field'))
+    cam_idx = int(request.args.get('cam_idx'))
+    success = cam_manager.cam_list[cam_idx].auto_calibration(closest_field)
     return str(success)
 
 @app.route('/get-cal-img/<int:cam_idx>', methods=['GET'])
@@ -89,7 +89,13 @@ if __name__ == '__main__':
 
     sio.run(app, host=SOCKET_SERVER_URL, port=PORT)
 
-    #cam_manager.take_pic()
+    """
+    for i in range(20):
+        cam_manager.cam_list[0].take_pic('static/jpg/chess/img_0_2_{}.jpg'.format(i))
+        cam_manager.cam_list[1].take_pic('static/jpg/chess/img_2_2_{}.jpg'.format(i))
+        cam_manager.cam_list[2].take_pic('static/jpg/chess/img_4_2_{}.jpg'.format(i))
+        time.sleep(1)
+    """
 
     #cam_manager.cam_list[0].auto_calibration(18)
     #cam_manager.cam_list[1].auto_calibration(11)

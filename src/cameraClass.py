@@ -2,15 +2,20 @@ import datetime
 import cv2
 import time
 import numpy as np
+import glob
 import src.boardClass as boardClass
 import src.dartThrowClass as dartThrowClass
 import src.videoCapture as videoCapture
 import src.db_handler as db
+import params
+
 class Camera:
         
     def __init__(self, src, width, height, rot = 0):
 
         self.src = src
+        self.width = width
+        self.height = height
         h = db.get_trafo(self.src)
         exp = db.get_exposure(self.src)
 
@@ -24,6 +29,7 @@ class Camera:
         self.dartThrow = None
         self.stop_dect_tread = False
         self.is_hand_motion = False
+        self.mapx, self.mapy = self.get_distortion_map()
 
     def start(self):
         self.cap.start()
@@ -46,9 +52,11 @@ class Camera:
         if success == False:
             raise Exception('Problem reading camera')
 
+        img = cv2.remap(img, self.mapx, self.mapy, cv2.INTER_LINEAR)
+
         print(img.shape)
 
-        if path = None:
+        if path is None:
             cv2.imwrite('static/jpg/last_{}.jpg'.format(self.src), img)
         else:
             cv2.imwrite(path, img)
@@ -82,9 +90,9 @@ class Camera:
 
     def auto_calibration(self, closest_field):
         
-        exp_times = (15, 12, 20, 9, 25, 6, 30, 35) # move to constants
+        exp_times = (10, 8, 12, 15, 18, 20, 9, 25, 6, 30, 35, 45, 60, 80) # move to constants
         exp_it = iter(exp_times)
-
+        
         success = False
         while not success: 
             try:
@@ -101,6 +109,54 @@ class Camera:
         db.write_row(self.src, h, exp_time)
         self.stop()
         return True
+
+
+    def get_distortion_map(self):
+        mtx = np.array([[params.fx, 0, params.cx],[0, params.fy, params.cy],[0, 0, 1]])
+        dist = np.array([[params.k1, params.k2, params.p1, params.p2, params.k3]])
+        newcameramtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (self.width,self.height), 1, (self.width,self.height))
+        mapx, mapy = cv2.initUndistortRectifyMap(mtx, dist, None, newcameramtx, (self.width,self.height), 5)
+        return mapx, mapy
+
+    def calibrate_distortion_matrix(self):
+        # Not in use
+
+        # termination criteria
+        criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
+        # prepare object points, like (0,0,0), (1,0,0), (2,0,0) ....,(6,5,0)
+        size = (7,9) # Constant
+        objp = np.zeros((size[0]*size[1],3), np.float32)
+        objp[:,:2] = np.mgrid[0:size[0],0:size[1]].T.reshape(-1,2)
+        # Arrays to store object points and image points from all the images.
+        objpoints = [] # 3d point in real world space
+        imgpoints = [] # 2d points in image plane.
+        path = 'static/jpg/chess_board/'
+        images = glob.glob(path + 'img_4*.jpg')
+
+        for fname in images:
+            img = cv2.imread(fname)
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+            # Find the chess board corners
+            ret, corners = cv2.findChessboardCorners(gray, (size[0],size[1]), None)
+            # If found, add object points, image points (after refining them)
+            if ret == True:
+
+                objpoints.append(objp)
+                corners2 = cv2.cornerSubPix(gray,corners, (11,11), (-1,-1), criteria)
+                imgpoints.append(corners)
+
+        ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
+
+        h,  w = img.shape[:2]
+        newcameramtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (w,h), 1, (w,h))
+
+        print('camera matrix: {}'.format(mtx))
+        print('distortion: {}'.format(dist))
+        print('new camera matrix: {}'.format(newcameramtx))
+
+        return newcameramtx, mtx, dist
+
 
     def manual_calibration(self):
         self.board.manual_calibration()
@@ -142,6 +198,10 @@ class Camera:
             
             # Criteria for being a dart:
             if t_motion < T_MAX and ratio_final < MAX_RATIO and ratio_final > MIN_RATIO:
+                # undistort images
+                img_before = cv2.remap(img_before, self.mapx, self.mapy, cv2.INTER_LINEAR)
+                img_after = cv2.remap(img_after, self.mapx, self.mapy, cv2.INTER_LINEAR)
+
                 self.dartThrow = dartThrowClass.dartThrow(img_before,img_after, self.src)
                 self.is_hand_motion = False
                 self.stop_dect_thread = True

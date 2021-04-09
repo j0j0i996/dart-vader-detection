@@ -254,7 +254,7 @@ class Board:
         kernel = np.ones((2,2),np.float32)
         dilation = cv2.dilate(canny,kernel, iterations = 1)
 
-        lines = cv2.HoughLinesP(dilation,  1, 1*np.pi/180, 45, minLineLength=70, maxLineGap=200)
+        lines = cv2.HoughLinesP(dilation,  1, 1*np.pi/180, 45, minLineLength=60, maxLineGap=200)
         mask_black = np.zeros_like(img)
 
         # Line Cleaning
@@ -322,7 +322,7 @@ class Board:
         gray_img_dark = cv2.cvtColor(masked_img,cv2.COLOR_BGR2GRAY)
 
         _, thresh = cv2.threshold(gray_img_dark, 150, 255, cv2.THRESH_BINARY)
-        thresh = cv2.bilateralFilter(thresh, 7, 100, 100)
+        thresh = cv2.bilateralFilter(thresh, 8, 100, 100)
 
         contours, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
         cntsSorted = sorted(contours, key=cv2.contourArea, reverse=True)

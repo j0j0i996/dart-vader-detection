@@ -90,8 +90,7 @@ class dartThrow:
         cv2.line(rec_img,(int(top_x),0),(int(bottom_x),height - 1),(255,0,255),1)
         cv2.circle(rec_img,(single_pt[0], single_pt[1]), 2, (200,0,255),2)
         cv2.imwrite("static/jpg/dart_line{}.jpg".format(self.src),rec_img)
-        """
-        
+        """        
 
         t2 = datetime.datetime.now()
         #print('Cam {}: Recognition time: {}'.format(self.src, t2-t1))

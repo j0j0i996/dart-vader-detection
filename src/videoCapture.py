@@ -18,8 +18,8 @@ class VideoStream:
             self.stream.set(cv2.CAP_PROP_FOURCC, codec)
             self.stream.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.75)
             self.stream.set(cv2.CAP_PROP_EXPOSURE, exp)
-            self.stream.set(cv2.CAP_PROP_FRAME_WIDTH, 800)
-            self.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, 600)
+            self.stream.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+            self.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
             self.stream.set(cv2.CAP_PROP_FPS, 8)
         except:
             print("Not able to open camera {}".format(src))
