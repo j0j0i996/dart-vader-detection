@@ -38,8 +38,6 @@ class Camera:
         self.cap.stop()
 
     def take_pic(self, path = None):
-        if self.cap.running == False:
-            self.start()
 
         success = False
         img = None
@@ -60,8 +58,6 @@ class Camera:
             cv2.imwrite('static/jpg/last_{}.jpg'.format(self.src), img)
         else:
             cv2.imwrite(path, img)
-
-        self.cap.stop()
         
         return img
 
@@ -72,9 +68,6 @@ class Camera:
         path = '../dart_test_vids/test_vids/vid{}.avi'.format(self.src)
         out = cv2.VideoWriter(path ,cv2.VideoWriter_fourcc('M','J','P','G'), 8, (frame_width,frame_height))
 
-        if self.cap.running == False:
-            self.start()
-
         t1 = datetime.datetime.now()
         while((datetime.datetime.now()-t1).total_seconds() < duration):
             img, success = self.cap.read()
@@ -84,12 +77,11 @@ class Camera:
             else:
                 break
 
-        self.cap.stop()
         out.release()
 
 
     def auto_calibration(self, closest_field):
-        
+      
         exp_times = (10, 8, 12, 15, 18, 20, 9, 25, 6, 30, 35, 45, 60, 80) # move to constants
         exp_it = iter(exp_times)
         
@@ -107,7 +99,7 @@ class Camera:
 
         h = self.board.h
         db.write_row(self.src, h, exp_time)
-        self.stop()
+        
         return True
 
 

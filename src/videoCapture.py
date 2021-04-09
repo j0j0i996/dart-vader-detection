@@ -11,7 +11,8 @@ class VideoStream:
 
         self.width = width
         self.height = height
-          
+        self.src = src
+
         try:
             self.stream = cv2.VideoCapture(src)
             codec = cv2.VideoWriter_fourcc( 'M', 'J', 'P', 'G'    )
@@ -22,7 +23,7 @@ class VideoStream:
             self.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
             self.stream.set(cv2.CAP_PROP_FPS, 8)
         except:
-            print("Not able to open camera {}".format(src))
+            print("Not able to open camera {}".format(self.src))
 
         self.rotCode = rotations[int(rot/90)]
         self.update_count = 0
@@ -34,6 +35,7 @@ class VideoStream:
     def start(self):
         self.running = True
         self.t = Thread(target=self.update, args=()).start()
+        print('started cam thread{}'.format(self.src))
 
     def update(self):
         while self.running:
