@@ -30,6 +30,7 @@ class Camera:
         self.stop_dect_tread = False
         self.is_hand_motion = False
         self.mapx, self.mapy = self.get_distortion_map()
+        self.empty_board_img = None
 
     def start(self):
         self.cap.start()
@@ -162,20 +163,28 @@ class Camera:
         self.dartThrow = None
         
         #Parameter
-        T_MAX = 0.6 # Maximum time the motion should take time
+        T_DART_MAX = 0.6 # Maximum time the motion should take time
         T_VIB = 0.05 # potential vibration time
-        MIN_RATIO = 0.001 #Thresholds important - make accessible / dynamic - between 0 and 1
-        MAX_RATIO = 0.035
-        DECT_RATIO = MIN_RATIO / 5
+        DART_MIN_RATIO = 0.001 #Thresholds important - make accessible / dynamic - between 0 and 1
+        DART_MAX_RATIO = 0.035
+        MOTION_DECT_RATIO = DART_MIN_RATIO / 5
+        MOTION_DECT_DIM = (240, 180)
+
+        EMPTY_BOARD_MAX_RATIO = 0.001
+        T_HAND_MIN = 1
+        HAND_MIN_RATIO = 0.04
+
+        if self.empty_board_img is None:
+            self.empty_board_img, _ = self.cap.read()
         
         while self.stop_dect_thread == False:
 
             # Wait for motion
-            img_before, img_start_motion = self.wait_diff_in_bnd(DECT_RATIO, np.inf)
+            img_before, img_start_motion = self.wait_diff_in_bnd(MOTION_DECT_RATIO, np.inf, dim = MOTION_DECT_DIM)
 
             t1 = datetime.datetime.now()
             # Wait for motion to stop
-            _, img_after = self.wait_diff_in_bnd(0, DECT_RATIO, start_image = img_start_motion)
+            _, img_after = self.wait_diff_in_bnd(0, MOTION_DECT_RATIO, dim = MOTION_DECT_DIM, start_image = img_start_motion)
 
             t2 = datetime.datetime.now()
             t_motion = (t2-t1).total_seconds()
@@ -186,10 +195,17 @@ class Camera:
             img_after, _ = self.cap.read()
 
             # Get difference ratio of image befor motion and image after motion
-            ratio_final = Camera.get_img_diff_ratio(img_before,img_after)
+            ratio_final = Camera.get_img_diff_ratio(img_before,img_after, dim = MOTION_DECT_DIM)
             
+            if Camera.get_img_diff_ratio(img_after, self.empty_board_img, dim = MOTION_DECT_DIM) < EMPTY_BOARD_MAX_RATIO:
+                #empty board detected
+                print("Empty board detected. Cam: {}".format(self.src))
+                self.stop_dect_thread = True
+                self.is_hand_motion = True
+                self.empty_board_img = img_after.copy();
+                return
             # Criteria for being a dart:
-            if t_motion < T_MAX and ratio_final < MAX_RATIO and ratio_final > MIN_RATIO:
+            elif t_motion < T_DART_MAX and ratio_final < DART_MAX_RATIO and ratio_final > DART_MIN_RATIO:
                 # undistort images
                 img_before = cv2.remap(img_before, self.mapx, self.mapy, cv2.INTER_LINEAR)
                 img_after = cv2.remap(img_after, self.mapx, self.mapy, cv2.INTER_LINEAR)
@@ -199,14 +215,16 @@ class Camera:
                 self.stop_dect_thread = True
                 return
 
-            elif t_motion > T_MAX or ratio_final > MAX_RATIO:
+            elif t_motion > T_HAND_MIN or ratio_final > HAND_MIN_RATIO:
                 #hand detected
                 print("Hand detected. Cam: {} T: {} Ratio: {}".format(self.src, t_motion, ratio_final))
                 self.stop_dect_thread = True
                 self.is_hand_motion = True
+                self.empty_board_img = img_after.copy();
                 return
 
-    def wait_diff_in_bnd(self,MIN_RATIO,MAX_RATIO, start_image = None):
+    def wait_diff_in_bnd(self,DART_MIN_RATIO,DART_MAX_RATIO, dim = None, start_image = None):
+
         img_diff_ratio = -1
         
         if start_image is None:
@@ -215,21 +233,21 @@ class Camera:
             img1 = start_image
 
         img2, _ = self.cap.read()
-        img_diff_ratio = Camera.get_img_diff_ratio(img1, img2)
+        img_diff_ratio = Camera.get_img_diff_ratio(img1, img2, dim)
 
-        while img_diff_ratio < MIN_RATIO or img_diff_ratio > MAX_RATIO:
+        while img_diff_ratio < DART_MIN_RATIO or img_diff_ratio > DART_MAX_RATIO:
             img1 = img2.copy()
             img2, _ = self.cap.read()
-            img_diff_ratio = Camera.get_img_diff_ratio(img1, img2)
+            img_diff_ratio = Camera.get_img_diff_ratio(img1, img2, dim)
 
         return img1, img2
 
     @staticmethod
-    def get_img_diff_ratio(img1, img2):
+    def get_img_diff_ratio(img1, img2, dim = None):
 
-        DIM = (240, 180)
-        img1 = cv2.resize(img1, DIM)
-        img2 = cv2.resize(img2, DIM)
+        if dim is not None:
+            img1 = cv2.resize(img1, dim)
+            img2 = cv2.resize(img2, dim)
 
         diff = cv2.absdiff(img2,img1)
         diff = cv2.cvtColor(diff,cv2.COLOR_BGR2GRAY)
