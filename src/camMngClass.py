@@ -92,6 +92,8 @@ class camManager:
         dect_cams = []
         next_player  = False
         while motion is False:
+            if self.dect_loop_active == False:
+                return
             for i in undetected_indx:
                 cam = self.cam_list[i]
                 if cam.stop_dect_thread:
