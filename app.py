@@ -81,13 +81,16 @@ def get_cal_img(cam_idx):
     except FileNotFoundError:
         abort(404)
 
+atexit.register(exit_handler)
+cam_manager.start_cams()
+sio.run(app, async)
+
 if __name__ == '__main__':
-
-    atexit.register(exit_handler)
-
-    cam_manager.start_cams()
-
-    sio.run(app, host=SOCKET_SERVER_URL, port=PORT)
+    pass
+    #atexit.register(exit_handler)
+    #print('hi')
+    #cam_manager.start_cams()
+    #sio.run(app, host=SOCKET_SERVER_URL, port=PORT)
 
     """
     for i in range(20):
@@ -102,4 +105,4 @@ if __name__ == '__main__':
     #cam_manager.cam_list[2].auto_calibration(2)
     #cam_manager.manual_calibration()
 
-    cam_manager.stop_cams()
+    #cam_manager.stop_cams()
