@@ -10,10 +10,12 @@ cmake==3.18.4.post1
 configparser==5.0.1
 Cython==0.29.21
 distro==1.5.0
+dnspython==1.16.0
 fasteners==0.15
 Flask==1.1.2
 Flask-SocketIO==5.0.1
 glfw==2.0.0
+greenlet==1.0.0
 idna==2.10
 imageio==2.9.0
 itsdangerous==1.1.0
