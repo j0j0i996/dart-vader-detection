@@ -47,6 +47,10 @@ def disconnect():
     cam_manager.dect_loop_active = False
     print('disconnected')
 
+@app.route('/name', methods=['GET'])
+def get_name():
+    return json.dumps( 'DartBoard' )
+
 @app.route('/echo/<msg>', methods=['GET'])
 def echo(msg):
     print(msg)
@@ -82,7 +86,7 @@ def get_cal_img(cam_idx):
         abort(404)
 
 if __name__ == '__main__':
-
+    
     atexit.register(exit_handler)
 
     cam_manager.start_cams()
