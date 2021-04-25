@@ -47,6 +47,10 @@ def disconnect():
     cam_manager.dect_loop_active = False
     print('disconnected')
 
+@app.route('/name', methods=['GET'])
+def get_name():
+    return json.dumps( 'DartBoard' )
+
 @app.route('/echo/<msg>', methods=['GET'])
 def echo(msg):
     print(msg)
