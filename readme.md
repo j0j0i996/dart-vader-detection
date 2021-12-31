@@ -18,16 +18,16 @@
 
 ## Hardware
 
-Electronics:
+### Electronics:
 - I use a Raspberry Pi 4 Model B (4Gb). Similar hardware should work as well.
 - 3 Webcams. It is crucial, that webcams support H.264 compression, as otherwise the Raspberry Pi will have problems with processing. I use these Larmtek webcams: https://www.amazon.de/gp/product/B085ZF1FQC/ref=ppx_yo_dt_b_search_asin_title?ie=UTF8&psc=1. They are cheap and work well, but have quite a bit of distortion which is filtered out by software. Higher end cameras will probably come with less 
 
-Mounts:
-I bought 3 camera clamps and attached them to the light ring of my dart board
+### Mounting:
+I bought 3 camera clamps and attached them to the light ring of my dart board. Feel free to copy my solution or be creative with other ideas on mouniting the cameras :) 
 - 3 Camera clamps https://www.amazon.de/gp/product/B00SIRAYX0/ref=ppx_yo_dt_b_asin_title_o01_s00?ie=UTF8&psc=1
 - Light ring https://www.amazon.de/Winmau-Dartboard-Plasma-Dartscheibe-Beleuchtung/dp/B07K1G7C4G/ref=sr_1_1?keywords=winmau+light&qid=1640966044&sr=8-1
 
-You can be creative with how you want to mount the camera. It is important, that the camera(s) should be placed somwhere with a distance of 20 cm - 50 cm  around the board. The center of each camera should approximiatly be the Bullseye. Make sure the whole dart board is visible on the camera image. Rule of thumb: In an image taken with the camera, you should be able to read all numbers on the board. The cameras should be positioned in a distance of approximitally 120 degree around the dart board. I positioned my cameras at the field 18, 2 and 11.
+It is important, that the camera(s) should be placed somwhere with a distance of 20 cm - 50 cm  around the board. The center of each camera should approximiatly be the Bullseye. Make sure the whole dart board is visible on the camera image. Rule of thumb: In an image taken with the camera, you should be able to read all numbers on the board. The cameras should be positioned in a distance of approximitally 120 degree around the dart board. I positioned my cameras at the field 18, 2 and 11.
 
 ## Software
 
