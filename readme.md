@@ -25,9 +25,9 @@ Electronics:
 Mounts:
 I bought 3 camera clamps and attached them to the light ring of my dart board
 - 3 Camera clamps https://www.amazon.de/gp/product/B00SIRAYX0/ref=ppx_yo_dt_b_asin_title_o01_s00?ie=UTF8&psc=1
-- Dart light ring https://www.amazon.de/Winmau-Dartboard-Plasma-Dartscheibe-Beleuchtung/dp/B07K1G7C4G/ref=sr_1_1?keywords=winmau+light&qid=1640966044&sr=8-1
+- Light ring https://www.amazon.de/Winmau-Dartboard-Plasma-Dartscheibe-Beleuchtung/dp/B07K1G7C4G/ref=sr_1_1?keywords=winmau+light&qid=1640966044&sr=8-1
 
-You can be creative with how you want to mount the camera. It is important, that the camera(s) should be placed somwhere with a distance of 20 cm - 50cm  around the board. The center of each camera should approximiatly be the Bullseye. Make sure the whole dart board is visible on the camera image. Rule of thumb: In an image taken with the camera, you should be able to read all numbers on the board. The cameras should be positioned in a distance of approximitally 120 degree around the dart board. I positioned my cameras at the field 18, 2 and 11.
+You can be creative with how you want to mount the camera. It is important, that the camera(s) should be placed somwhere with a distance of 20 cm - 50 cm  around the board. The center of each camera should approximiatly be the Bullseye. Make sure the whole dart board is visible on the camera image. Rule of thumb: In an image taken with the camera, you should be able to read all numbers on the board. The cameras should be positioned in a distance of approximitally 120 degree around the dart board. I positioned my cameras at the field 18, 2 and 11.
 
 ## Software
 
@@ -44,6 +44,7 @@ https://flask.palletsprojects.com/en/1.1.x/installation/
 
 ### Run tool
 > python3 app.py
+> 
 --> From here on you should be able to interact with the recognition using the frontend https://github.com/j0j0i996/dart_vader_scorer_app
 
 ### Autostart at boot:
