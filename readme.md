@@ -1,11 +1,10 @@
-# Automated dart scoring tool using a raspberry pi and opencv
+# OpenCV dart scoring tool run on a Raspberry Pi connected to 3 Webcams
 
-- I run it on a Raspberry Pi 4
-- 3 USB cameras
-- Automized Camera Calibration
+- Automized camera calibration
+- 95% accuracy
 - Automatic change of player
 - All events are send to a Websocket (SocketIO)
-- This expo mobile app is used as frontend: 
+- Mobile app used as frontend: 
   -  Repository: https://github.com/j0j0i996/dart_vader_scorer_app. 
   -  The APP can be used directly on iOS and Android by downloading the Expo Go APP and using this link: https://expo.dev/accounts/j0j0i996/projects/scorer_app/
   -  Any other frontend can be connected as well
