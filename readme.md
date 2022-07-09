@@ -1,5 +1,10 @@
 # OpenCV dart scoring tool for Raspberry Pi using 3 Webcams
 
+## Video to see the recognition in action:
+https://drive.google.com/file/d/1J1QGNGnWUWIjgj82r-s7y6O6o1NVKWVX/view?usp=sharing
+
+## Features:
+
 - Automized camera calibration
 - 95% accuracy
 - Automatic change of player
