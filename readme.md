@@ -1,4 +1,4 @@
-# OpenCV dart scoring tool for Raspberry Pi using 3 Webcams
+# Automatic Darts scoring using 3 Webcams, RaspberryPI and OpenCV
 
 ## Video to see the recognition in action:
 https://drive.google.com/file/d/1J1QGNGnWUWIjgj82r-s7y6O6o1NVKWVX/view?usp=sharing
