@@ -1,4 +1,4 @@
-# OpenCV dart scoring tool run on a Raspberry Pi connected to 3 Webcams
+# OpenCV dart scoring tool for Raspberry Pi using 3 Webcams
 
 - Automized camera calibration
 - 95% accuracy
